@@ -43,6 +43,15 @@ One commit per artifact created. Each commit:
 
 When both planning files are empty, delete them in a final commit.
 
+## Agent Tooling Conventions
+
+- **Always launch AI-agent sessions from the `nesto` meta-repo root**, not from inside a sub-repo. Skill discovery is scoped to the repo root of wherever the session starts — launching from `backend/` would miss `nesto/.agents/skills/`.
+- **Context files (`CLAUDE.md` / `AGENTS.md`) use ancestor loading** — tools walk up the filesystem tree, crossing git-repo boundaries. Sub-repo context files should point back to the meta-repo hub rather than duplicating it.
+- **Skills are repo-root-scoped** — discovery climbs from the working directory up to the session's repo root. Sub-repo-specific skills are discovered lazily when the agent works in that subdirectory.
+- **Symlinks keep identical content in sync** — `.claude/skills/` ↔ `.agents/skills/` share one skill set; `AGENTS.md` ↔ `CLAUDE.md` will do the same for context.
+
+(These notes will move into `AGENTS.md` when it's created in commit 3.)
+
 ## Commit Style
 
 Conventional Commits, per the `commit-work` skill:

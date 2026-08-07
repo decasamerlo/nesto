@@ -81,36 +81,7 @@ projects:
 
 `mani init`, run inside a folder already containing cloned repos, can auto-generate this file. `mani` also generates a `.gitignore` excluding the cloned subfolders from the meta-repo's own git tracking (the meta-repo tracks only its own manifest/docs, not the sub-repos' contents).
 
-## 4. AI Agent Tooling Across Repos
 
-### The core question
-Whether AI-agent skills/context installed once "in `nesto`" (the meta-repo) can be referenced/used automatically by the sub-repos nested inside it (`backend/`, `web/`, `mobile/`), without reinstalling per repo, and without using global user-level installs (which don't travel with a repo across machines — a real constraint since machines get switched).
-
-### Tool-specific context files
-Different AI-agent tools use different file conventions for project context. The main ones in use here:
-
-| Tool | Context file | Skill folder |
-|------|-------------|--------------|
-| OpenCode | `AGENTS.md` | `.agents/skills/` |
-| Claude Code | `CLAUDE.md` | `.claude/skills/` |
-
-Both file types should exist at the meta-repo root (and inside each sub-repo where repo-specific content applies). A symlink can keep `AGENTS.md` and `CLAUDE.md` in sync where their content overlaps; where they diverge (e.g., a tool-specific invocation hint), each file carries its own version.
-
-The same applies to skill folders: `.agents/skills/` and `.claude/skills/` can either be symlinks of each other (if the skill set is identical) or diverge per tool if needed.
-
-### Confirmed behavior (verified against tool documentation)
-There is an important asymmetry between how the two file types are loaded by their respective tools:
-
-- **Context files (`CLAUDE.md` / `AGENTS.md`) use ancestor loading** — these tools walk *up* the full filesystem directory tree looking for their respective context file, and this crosses nested git-repo boundaries (it is filesystem-based, not git-boundary-based). A real-world example of this in production: a company's multi-repo setup (structurally similar to what's being built here) has each sub-repo's own context file explicitly state that "ecosystem context is inherited via parent-chain" and instructs not to duplicate it — this only works because the parent directory's context file is picked up automatically regardless of the sub-repo's own `.git` boundary.
-- **Skills are scoped more narrowly** — skill discovery goes from the starting directory, through every parent, **up to the repository root** of wherever the session was started. If a session is launched from inside `backend/` (its own independent git repo), skill discovery stops at `backend`'s own root and will *not* climb further up into `nesto/.claude/skills/` (or `nesto/.agents/skills/`).
-
-### Resulting practice (decided)
-**Always start/launch AI-agent sessions from the `nesto` meta-repo root**, not by `cd`-ing directly into an individual sub-repo (`backend/`, `web/`, `mobile/`) and launching from there. When started at the `nesto` root:
-- Root-level skills (`nesto/.agents/skills/`, `nesto/.claude/skills/`) are in scope from the start of the session.
-- Skills nested inside sub-repos (`nesto/backend/.agents/skills/`, etc.) are discovered lazily the moment the agent works with files in that subdirectory during the session — this works regardless of the sub-repos being separate git repositories.
-- Context-file ancestor-loading works automatically in either case, since it isn't git-boundary-limited.
-
-This means: **no separate "shared skills" repo, no submodules are needed** to share skills across the three repos — placement plus consistent session-launch habit is sufficient. Symlinks are used only to keep identical content (e.g., `AGENTS.md` ↔ `CLAUDE.md`, or `.agents/skills/` ↔ `.claude/skills/`) in sync, avoiding duplication.
 
 **One caveat to keep in mind**: if a sub-repo is ever cloned and opened completely standalone (outside of the `nesto` folder structure — e.g., someone else clones just `nesto-backend` on its own), it will only have access to whatever tool-specific content is committed inside that repo itself. Anything repo-specific that needs to survive a standalone clone (e.g., Hexagonal Architecture conventions specific to the backend) should live inside that repo's own `.claude/` and `.agents/` folders, not only at the `nesto` root.
 
@@ -156,4 +127,3 @@ The `nesto` meta-repo is created first (per Section 2), with all three sub-repos
 ## Open Items Still Undecided
 
 - Exact home for the slice-by-slice implementation roadmap (meta-repo `docs/` vs. inside `nesto-backend` itself) once the split from `nesto-planning-notes.md` happens.
-- Whether skills should be split into "shared" (`nesto/.claude/skills/`, `nesto/.agents/skills/`) vs. "repo-specific" (`backend/.claude/skills/`, `backend/.agents/skills/`, etc.) categories explicitly now, or organized organically as they're created — the mechanics support either, per Section 4.
