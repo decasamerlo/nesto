@@ -64,24 +64,6 @@ nesto/
 └── mobile/    (nesto-mobile repo, cloned here by mani)
 ```
 
-Example `mani.yaml` shape:
-
-```yaml
-projects:
-  backend:
-    path: backend
-    url: git@github.com:you/nesto-backend.git
-  web:
-    path: web
-    url: git@github.com:you/nesto-web.git
-  mobile:
-    path: mobile
-    url: git@github.com:you/nesto-mobile.git
-```
-
-`mani init`, run inside a folder already containing cloned repos, can auto-generate this file. `mani` also generates a `.gitignore` excluding the cloned subfolders from the meta-repo's own git tracking (the meta-repo tracks only its own manifest/docs, not the sub-repos' contents).
-
-
 
 **One caveat to keep in mind**: if a sub-repo is ever cloned and opened completely standalone (outside of the `nesto` folder structure — e.g., someone else clones just `nesto-backend` on its own), it will only have access to whatever tool-specific content is committed inside that repo itself. Anything repo-specific that needs to survive a standalone clone (e.g., Hexagonal Architecture conventions specific to the backend) should live inside that repo's own `.claude/` and `.agents/` folders, not only at the `nesto` root.
 
@@ -114,10 +96,6 @@ A real multi-repo company codebase was reviewed for structural inspiration (stru
 
 The `nesto` meta-repo is created first (per Section 2), with all three sub-repos scaffolded from the start:
 
-- Scaffold the structure shown in Section 3's folder layout.
-- Populate `nesto/CLAUDE.md` as a short hub doc: table of the three repos (backend/web/mobile) and their roles, pointers to `docs/conventions/` and `docs/adr/`.
-- Create `nesto/AGENTS.md` as a symlink to `CLAUDE.md` (or vice versa) so they stay in sync — both files carry the same ecosystem hub content, avoiding duplication.
-- Create `docs/repo-briefs.md` with one entry per repo (role, stack, key modules, link to that repo's own `CLAUDE.md`).
 - **Split the existing `nesto-planning-notes.md` file** into this new structure:
   - Ecosystem-level architecture decisions (Java over Rails, Hexagonal Architecture, React over Vue, REST over GraphQL, polyrepo over monorepo, node-based domain model, etc.) → `docs/adr/` as individual ADR entries.
   - Cross-cutting conventions (e.g., Hexagonal Architecture rules, domain modeling principles, testing philosophy) → `docs/conventions/`.

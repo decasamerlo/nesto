@@ -1,0 +1,18 @@
+projects:
+  nesto:
+    path: .
+    url: git@github.com:decasamerlo/nesto.git
+  
+  backend:
+    url: git@github.com:decasamerlo/nesto-backend.git
+  
+  mobile:
+    url: git@github.com:decasamerlo/nesto-mobile.git
+  
+  web:
+    url: git@github.com:decasamerlo/nesto-web.git
+  
+tasks:
+  hello:
+    desc: Print Hello World
+    cmd: echo "Hello World"
