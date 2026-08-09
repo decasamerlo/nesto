@@ -10,59 +10,6 @@ This document summarizes a planning discussion about how to structure Nesto's re
 
 For product/domain/architecture decisions (Java backend, Hexagonal Architecture, React frontend, node/tree model, slices, etc.), see the separate `nesto-planning-notes.md` file. This document is scoped only to **repo organization and AI-agent tooling**.
 
-## 1. Repo Separation Decision
-
-**Decided: three separate repositories**, not a monorepo:
-- `nesto-backend` — Java + Spring Boot, Hexagonal Architecture.
-- `nesto-web` — React + TypeScript frontend.
-- `nesto-mobile` — React Native (via Expo), to be started later.
-
-### Reasoning
-- Each repo should be independently readable/evaluable as a portfolio piece — a monorepo makes it harder for someone (e.g. a reviewer) to assess one piece without the others.
-- The three pieces have genuinely different lifecycles, tooling, and release cadences (Maven/Gradle vs npm/Vite vs Expo/EAS).
-- No mobile app exists yet — building monorepo tooling (Nx/Turborepo) for a mostly-empty third piece would be premature structure.
-- Matches the same "explicit boundaries, no leaking concerns" instinct already applied to the backend's Hexagonal Architecture — the backend shouldn't need to know or care what's consuming its API.
-- A middle ground was discussed (merge web + mobile into one repo later, since React and React Native can share real code beyond just types) — **not adopted yet**; revisit only once the mobile app exists and there's evidence of real shared-code pain, not speculatively.
-
-## 2. Sequencing
-
-**Decided: create the meta-repo (`nesto`) first**, with all three sub-repos (`nesto-backend`, `nesto-web`, `nesto-mobile`) scaffolded from the start. The meta-repo is the single source of truth for the ecosystem; starting with it avoids retrofitting orchestration later. Each sub-repo is still an independent git repository with its own history and CI — the meta-repo only tracks its own manifest, docs, and configuration. Begin implementation with `nesto-backend` (the first slice of work), but the structure for all three is in place from day one.
-
-## 3. Meta-Repo / Multi-Repo Orchestration Tooling
-
-**Decided: use `mani`** (already known from prior job experience) as the orchestration tool for a "meta-repo" that ties the three independent repos together for local development convenience.
-
-### What this is (and isn't)
-- This is **not** git submodules and **not** a true monorepo. Each of the three repos remains a fully independent git repository — separate history, separate CI, separate remote.
-- The `nesto` meta-repo itself is just a thin wrapper: a `mani.yaml` manifest listing the repo URLs, plus shared docs. Running `mani sync` clones/updates all three repos into place; `mani run` executes commands across a filtered subset.
-- This solves the "juggling three separate clones/terminals" annoyance without creating git-level coupling between the repos.
-
-Since the meta-repo is created first (per Section 2), `mani.yaml` is committed as part of the initial scaffolding — it doesn't need auto-discovery from pre-existing repos.
-
-### Alternatives considered and rejected
-- **`meta` (mateodelnorte/meta)** — similar concept, npm/JS-flavored, optionally backed by real git submodules. Rejected in favor of `mani`'s language-agnostic approach (better fit for a polyglot Java + TS/RN project) and because `mani` is already known from prior experience.
-- **`vcstool`** — same manifest idea, originally from the ROS/robotics ecosystem. Less actively used outside that community; not chosen.
-- **Plain git submodules (no orchestrator)** — would give a pinned-commit-per-repo guarantee (useful for reproducible "snapshot" tagging across all three repos at once) but comes with real, well-known friction (detached HEAD state, easy to forget to push a submodule's commits before updating the parent's pointer). Not adopted; could be revisited only if reproducible cross-repo snapshots become a specific need.
-- **Google's `repo` tool** — powerful but real learning-curve overhead; overkill for a 3-repo personal project.
-
-### Folder layout inside the meta-repo
-
-Following `mani`'s own conventions — role-named folders flat at the root:
-
-```
-nesto/
-├── mani.yaml
-├── README.md
-├── CLAUDE.md
-├── AGENTS.md
-├── docs/
-│   ├── repo-briefs.md
-│   ├── conventions/
-│   └── adr/
-├── backend/   (nesto-backend repo, cloned here by mani)
-├── web/       (nesto-web repo, cloned here by mani)
-└── mobile/    (nesto-mobile repo, cloned here by mani)
-```
 
 
 **One caveat to keep in mind**: if a sub-repo is ever cloned and opened completely standalone (outside of the `nesto` folder structure — e.g., someone else clones just `nesto-backend` on its own), it will only have access to whatever tool-specific content is committed inside that repo itself. Anything repo-specific that needs to survive a standalone clone (e.g., Hexagonal Architecture conventions specific to the backend) should live inside that repo's own `.claude/` and `.agents/` folders, not only at the `nesto` root.
@@ -97,8 +44,8 @@ A real multi-repo company codebase was reviewed for structural inspiration (stru
 The `nesto` meta-repo is created first (per Section 2), with all three sub-repos scaffolded from the start:
 
 - **Split the existing `nesto-planning-notes.md` file** into this new structure:
-  - Ecosystem-level architecture decisions (Java over Rails, Hexagonal Architecture, React over Vue, REST over GraphQL, polyrepo over monorepo, node-based domain model, etc.) → `docs/adr/` as individual ADR entries.
-  - Cross-cutting conventions (e.g., Hexagonal Architecture rules, domain modeling principles, testing philosophy) → `docs/conventions/`.
+  - Ecosystem-level architecture decisions → `docs/adr/` as individual ADR entries. Created so far: ADR 001 (self-referential Node type), ADR 002 (REST over GraphQL), ADR 003 (polyrepo over monorepo). Decisions deemed not worth an ADR (self-evident from the codebase or personal context) were skipped — Java over Rails, React over Vue.
+  - Cross-cutting conventions → `docs/conventions/`. Created so far: domain-layer isolation.
   - The slice-by-slice implementation roadmap → likely stays closer to `nesto-backend`'s own docs, or a `docs/` folder within the meta-repo scoped to planning/roadmap, since it's primarily backend-sequenced (not yet finalized where this should live).
 - Each of `backend/`, `web/`, `mobile/` (once each repo exists) should have its own `CLAUDE.md` / `AGENTS.md` scoped to that repo's build commands, module map, and stack-specific notes, with a one-line pointer back to the ecosystem hub.
 
