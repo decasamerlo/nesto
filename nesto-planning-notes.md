@@ -17,7 +17,7 @@ A personal list-of-lists app (todos, shopping lists, exercise/food/diary logs, r
   - Reasoning: 8 years of existing Java experience vs zero Rails experience. Faster for *this developer specifically* despite Rails being faster in the abstract. Aligns with existing job-market trajectory. Reuses existing hexagonal architecture discipline.
 - **Architecture: Hexagonal Architecture (HA)**, as clean and rigorous as possible — no shortcuts ("gambiarras"/"atalhos"), even where it adds effort.
 - **Frontend: React + TypeScript** (decided). Backend is API-first (REST), so this was a deferred decision revisited after initial planning — see "Frontend Stack Decision" section below for full reasoning.
-- **API style: REST**, not GraphQL. GraphQL's benefits (flexible querying for many differing clients) don't apply — single frontend, predictable access patterns, and DB-level tree strategy already solves the N+1 problem GraphQL would otherwise need DataLoader batching for.
+
 
 ## Frontend Stack Decision
 

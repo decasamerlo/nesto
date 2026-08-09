@@ -25,7 +25,7 @@ When both planning files are empty, delete them in a final commit.
 
 Conventional Commits, per the `commit-work` skill:
 
-```
+```text
 <type>(<scope>): <summary>
 
 <What changed.>
