@@ -20,3 +20,17 @@ Working inside a sub-repo, or deciding which repo owns a change? Read [docs/repo
 ## Orchestration
 
 `mani sync` clones/updates the three repos. `mani run` executes tasks across them. Manifest: [`mani.yaml`](mani.yaml).
+
+## Agent skills
+
+### Issue tracker
+
+Issues live as local markdown files under `.scratch/<feature-slug>/`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical triage roles use their default label strings. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context layout: `CONTEXT.md` at the root, ADRs in `docs/adr/`. See `docs/agents/domain.md`.
