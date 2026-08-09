@@ -11,13 +11,10 @@ Both are committed as-is in the first commit. They get progressively stripped â€
 
 ## Commit Sequence
 
-### 4. matt-pocock skills setup
-
-Commit the matt-pocock skills setup (`docs/agents/`, etc.) once the issue tracker and triage vocabulary are configured.
-
-### 5. Incremental extraction
+### 5. Stage: Incremental extraction
 
 One commit per artifact created. Each commit:
+
 - Adds the artifact (e.g., `docs/adr/001-java-over-rails.md`, `docs/conventions/hexagonal-architecture.md`).
 - Removes the corresponding lines from whichever planning file held them.
 - Uses Conventional Commits: `type(scope): summary`.

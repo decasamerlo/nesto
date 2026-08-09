@@ -50,13 +50,6 @@ Nesto needs: drag-and-drop (nested tree reordering/reparenting), an eventual mob
 
 ## Core Domain Model
 
-### Nodes, not Lists/Items
-- Single self-referential `Node` model — no separate `List`/`Item` classes, no `type` column.
-- **"List-ness" is fully derived, not stored**: a node with children behaves/renders as a list; a node with no children behaves/renders as an item.
-- Conversion between list/item is automatic and implicit — adding a child makes a node a list, removing the last child makes it an item again. No explicit "convert" action.
-- All fields persist regardless of list/item state; the UI simply hides/shows fields depending on current state.
-- Domain `Node` does **not** hold object references to parent/children (no `Node parent`, no `List<Node> children` fields) — only a `NodeId parentId` value. This avoids forcing the domain to solve a graph-loading problem. "Get children" is an explicit repository/use-case call, not a traversable property.
-
 ### Hierarchy storage strategy
 - **Adjacency list** (`parent_id` on the node), not a closure table, to start — chosen for lowest complexity given solo/small-friends scale.
 - Closure-table equivalent (hand-rolled `node_hierarchy` join table) considered but deferred — only build if descendant/ancestor query performance actually becomes a problem.
