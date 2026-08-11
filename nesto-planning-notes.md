@@ -97,11 +97,7 @@ Nesto needs: drag-and-drop (nested tree reordering/reparenting), an eventual mob
 - `Node.rollOverForNextOccurrence()` — domain method, resets status to OPEN, clears `completedAt`, computes next `startDate`/`endDate`. Uses injected `Clock`/explicit "now" rather than calling `Instant.now()` directly, to keep it deterministic and testable.
 - Delivered via a scheduled job (`ResetRecurringNodesUseCase`, Spring `@Scheduled`) rather than on-demand.
 
-## Testing Philosophy
 
-- Very rigorous testing, especially at the domain layer.
-- Domain-layer logic (cycle prevention, list/item derivation, reorder/move invariants, status transitions, recurrence roll-over) must be unit-testable with **zero Spring context and no DB** involvement.
-- Mock outbound ports (notifications, calendar) in automated tests; real external calls (Google Calendar, FCM, email) only via manual/smoke testing.
 
 ## Implementation Slices (in order)
 
