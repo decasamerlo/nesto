@@ -48,29 +48,6 @@ Nesto needs: drag-and-drop (nested tree reordering/reparenting), an eventual mob
 - **Component structure**: apply the same "explicit layers, no magic" instinct used in the Java backend — separate API client/hooks layer from presentational components (not a strict 1:1 mapping to hexagonal architecture, but same spirit).
 - **Mobile (later)**: React Native via Expo, sharing types and API client logic where practical; UI rebuilt natively per platform conventions.
 
-## Core Domain Model
-
-### Hierarchy storage strategy
-- **Adjacency list** (`parent_id` on the node), not a closure table, to start — chosen for lowest complexity given solo/small-friends scale.
-- Closure-table equivalent (hand-rolled `node_hierarchy` join table) considered but deferred — only build if descendant/ancestor query performance actually becomes a problem.
-- Alternative considered and rejected for now: recursive CTEs via native queries/jOOQ (Postgres `WITH RECURSIVE`), since Spring Data JPA has no native recursive query support.
-
-### Checking "has children" (no counter cache)
-- Explicitly **not** using a stored/manually-maintained counter (`childrenCount`) — decided against Rails-style `counter_cache` pattern.
-- Reasoning: a derived, query-backed check (`NodeRepository.hasChildren(NodeId id)` via `COUNT` query) is more correct-by-construction than a manually maintained cache, which risks drifting out of sync if any code path forgets to update it. Revisit only if measured performance requires it.
-
-### Cycle prevention
-- Lives in a domain service (e.g., `NodeHierarchyService`), not on `Node` itself — handed the specific ancestor/descendant chain to check rather than the aggregate knowing its own ancestors.
-
-### Ordering (position)
-- Confirmed to be a **domain concern**, not a persistence-only detail.
-- `Node` carries its own `position` field; reordering is enforced by domain rules (no duplicate positions among siblings, etc.), fully unit-testable without Spring/DB.
-- No `acts_as_list`-equivalent gem in Java — reindexing logic (shifting siblings on insert/delete/reorder) is hand-rolled in the application layer.
-
-### Move (reparent + reposition)
-- **One use case, not two.** Since the UI dictates exact placement on every move (including drag within the same parent), "reorder" is just the special case of "move" where `newParentId == currentParentId`. Modeled as a single `MoveNodeUseCase(nodeId, newParentId, newPosition)`.
-- Internally: validate no cycle → update node's parent/position → close the gap in the old parent's siblings → make room in the new parent's siblings. The reindexing logic is the most invariant-sensitive part of the whole app and deserves the most thorough tests.
-
 ## Statuses
 
 - **Status is optional, not universal** — not every node needs one (a recipe, idea, or discussion has no status; a todo, shopping item, or exercise does).
