@@ -16,37 +16,8 @@ A personal list-of-lists app (todos, shopping lists, exercise/food/diary logs, r
 - **Backend: Java + Spring Boot**, not Ruby on Rails.
   - Reasoning: 8 years of existing Java experience vs zero Rails experience. Faster for *this developer specifically* despite Rails being faster in the abstract. Aligns with existing job-market trajectory. Reuses existing hexagonal architecture discipline.
 - **Architecture: Hexagonal Architecture (HA)**, as clean and rigorous as possible — no shortcuts ("gambiarras"/"atalhos"), even where it adds effort.
-- **Frontend: React + TypeScript** (decided). Backend is API-first (REST), so this was a deferred decision revisited after initial planning — see "Frontend Stack Decision" section below for full reasoning.
+- **Frontend: React + TypeScript + Vite + library stack** (decision in ADR 004 — see `docs/adr/004-react-for-frontend.md`).
 
-
-## Frontend Stack Decision
-
-**Decided: React + TypeScript** for web, with **React Native (via Expo)** planned for the eventual mobile app.
-
-### Context / prior experience
-- Vue 3 experience exists (JTech Tasklist project) but was almost entirely AI-assisted — limited genuine personal depth built from it.
-- Real hands-on experience with Angular.
-- Older experience with JSF — considered too outdated, ruled out.
-- Liked the idea of React's component model and its relatively direct path to React Native for mobile, though acknowledged a PWA could also cover mobile reasonably well.
-
-### Decision criteria
-Nesto needs: drag-and-drop (nested tree reordering/reparenting), an eventual mobile app, personal + close-friends usage, portfolio value, and a strong learning/skill-building goal — explicitly not optimizing for implementation speed, wants the most rigorous codebase without shortcuts.
-
-### Reasoning
-- **Drag and drop**: `dnd-kit` (React) is mature, accessible (keyboard support built in), and well-suited to nested/tree drag-and-drop specifically — the hardest UI problem in this app. Angular CDK's drag-drop module is also genuinely good, so this alone wasn't the deciding factor.
-- **Mobile path**: React Native (via Expo) shares language, mental model, and business-logic patterns (hooks, state management, API client, types) with the React web app — more real transfer than Angular's mobile story (Ionic), which has a smaller ecosystem and less momentum today.
-- **Portfolio value**: React is currently the most in-demand frontend skill in most markets and pairs naturally with a Spring Boot backend as a coherent full-stack story. Angular experience is already "banked" from prior work; building real React depth fills an actual gap rather than duplicating existing skills.
-- **Learning value (weighted heaviest)**: React is deliberately unopinionated — no built-in router, state management, or forms handling; these are composed from separate libraries. This forces more explicit understanding and decision-making, mirroring the same "explicit over magic" preference already reflected in choosing Java/Spring + strict Hexagonal Architecture over Rails. Given the stated goal of learning and not caring about time-to-implement, this trade-off fits well.
-- Angular remains a defensible alternative if banking existing experience mattered more than building new depth, but was not chosen given the above.
-
-### Concrete stack (for later reference, not yet committed to revisit until needed)
-- **Web**: React + TypeScript, Vite as build tool.
-- **Drag and drop**: `dnd-kit`.
-- **Server state / API calls**: TanStack Query.
-- **Client-only state** (if needed beyond server state): Zustand.
-- **Forms**: `react-hook-form` + `zod` for validation.
-- **Component structure**: apply the same "explicit layers, no magic" instinct used in the Java backend — separate API client/hooks layer from presentational components (not a strict 1:1 mapping to hexagonal architecture, but same spirit).
-- **Mobile (later)**: React Native via Expo, sharing types and API client logic where practical; UI rebuilt natively per platform conventions.
 
 ## Statuses
 
@@ -95,4 +66,4 @@ Nesto needs: drag-and-drop (nested tree reordering/reparenting), an eventual mob
 
 - Whether a single implicit root node per user (vs. multiple top-level roots) is the final model — affects how "move to root" is expressed in the Move Node API.
 - Whether calendar sync should ever become automatic for any dated node, vs. staying manual/opt-in indefinitely.
-- Mobile app framework choice — React Native via Expo is the current plan, but not yet started; needed before slice 12 can start in earnest.
+- Mobile app not yet started — needed before slice 12 can start in earnest.
