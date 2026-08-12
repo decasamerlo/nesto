@@ -15,7 +15,7 @@ Both are committed as-is in the first commit. They get progressively stripped â€
 
 One commit per artifact created. Each commit:
 
-- Adds the artifact (e.g., `docs/adr/001-java-over-rails.md`, `docs/conventions/hexagonal-architecture.md`).
+- Adds the artifact (e.g., `docs/adr/001-node-based-domain-model.md`, `docs/conventions/domain-layer-isolation.md`).
 - Removes the corresponding lines from whichever planning file held them.
 - Uses Conventional Commits: `type(scope): summary`.
 
