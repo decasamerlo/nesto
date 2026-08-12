@@ -19,8 +19,8 @@ For product/domain/architecture decisions (Java backend, Hexagonal Architecture,
 The `nesto` meta-repo is created first (per Section 2), with all three sub-repos scaffolded from the start:
 
 - **Split the existing `nesto-planning-notes.md` file** into this new structure:
-  - Ecosystem-level architecture decisions → `docs/adr/` as individual ADR entries. Created so far: ADR 001 (self-referential Node type), ADR 002 (REST over GraphQL), ADR 003 (polyrepo over monorepo). Decisions deemed not worth an ADR (self-evident from the codebase or personal context) were skipped — Java over Rails, React over Vue.
-  - Cross-cutting conventions → `docs/conventions/`. Created so far: domain-layer isolation.
+  - Ecosystem-level architecture decisions → `docs/adr/` as individual ADR entries. Created so far: ADR 001 (self-referential Node type), ADR 002 (REST over GraphQL), ADR 003 (polyrepo over monorepo), ADR 004 (React for frontend). Decisions deemed not worth an ADR (self-evident from the codebase or personal context) were skipped — Java over Rails.
+  - Cross-cutting conventions → `docs/conventions/`. Created so far: domain-layer isolation, frontend layer isolation.
   - The slice-by-slice implementation roadmap → likely stays closer to `nesto-backend`'s own docs, or a `docs/` folder within the meta-repo scoped to planning/roadmap, since it's primarily backend-sequenced (not yet finalized where this should live).
 - Each of `backend/`, `web/`, `mobile/` (once each repo exists) should have its own `CLAUDE.md` / `AGENTS.md` scoped to that repo's build commands, module map, and stack-specific notes, with a one-line pointer back to the ecosystem hub.
 
