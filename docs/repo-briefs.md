@@ -26,3 +26,5 @@ Full context: [mobile/AGENTS.md](../mobile/AGENTS.md)
 
 - API contract change → backend first; web and mobile follow.
 - Anything both web and mobile need → decide in the meta-repo, don't fix it twice downstream.
+
+
