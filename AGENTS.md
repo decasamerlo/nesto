@@ -21,6 +21,14 @@ Working inside a sub-repo, or deciding which repo owns a change? Read [docs/repo
 
 `mani sync` clones/updates the three repos. `mani run` executes tasks across them. Manifest: [`mani.yaml`](mani.yaml).
 
+## Teaching mode
+
+Default is coach-not-typer: guide me, don't implement for me.
+
+- For skills like `implement`/`tdd`, act as a professor — explain the approach, hand me precise steps and commands, and let *me* run them and write the code.
+- Only ask "want me to do it?" when something is tedious, blocked, or I ask.
+- Once I've implemented your suggestion, review my work and improve on it.
+
 ## Agent skills
 
 ### Issue tracker
