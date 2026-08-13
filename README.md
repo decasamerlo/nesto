@@ -1,35 +1,62 @@
-# Nesto — Initial Commit Plan
+# Nesto
 
-This document tracks the phased bootstrap of the `nesto` meta-repo. It is consumed by future sessions until both `nesto-planning-notes.md` and `nesto-repo-structure-discussion-notes.md` are fully removed — at which point this file is rewritten to describe the repo as it actually is.
+A personal list-of-lists app for capturing any hierarchical structure — todos, shopping lists, recipes, ideas, exercise logs, diaries — organized as a tree of recursively composable nodes.
 
-## The Two Source Files
+This is the **meta-repo**: it tracks shared docs, conventions, and config; it orchestrates the three application repos.
 
-- `nesto-planning-notes.md` — product, architecture, and domain decisions (Java over Rails, Hexagonal Architecture, React, REST, node model, slices).
-- `nesto-repo-structure-discussion-notes.md` — repo organization and AI tooling (three-repo split, `mani`, skill placement, ecosystem hub pattern, context-file conventions).
-
-Both are committed as-is in the first commit. They get progressively stripped — line by line, commit by commit — as their content is committed into the artifacts that replace them. When nothing remains, both are deleted.
-
-## Commit Sequence
-
-### 5. Stage: Incremental extraction
-
-One commit per artifact created. Each commit:
-
-- Adds the artifact (e.g., `docs/adr/001-node-based-domain-model.md`, `docs/conventions/domain-layer-isolation.md`).
-- Removes the corresponding lines from whichever planning file held them.
-- Uses Conventional Commits: `type(scope): summary`.
-
-When both planning files are empty, delete them in a final commit.
-
-## Commit Style
-
-Conventional Commits, per the `commit-work` skill:
+## Repo Structure
 
 ```text
-<type>(<scope>): <summary>
-
-<What changed.>
-<Why it changed.>
+nesto/
+├── backend/        Java + Spring Boot API (Hexagonal Architecture)
+├── web/            React + TypeScript SPA (Vite)
+├── mobile/         React Native (Expo) — not yet started
+└── docs/           Architecture decisions (ADRs), conventions, domain context
 ```
 
-Prefer small, single-concept commits over batching — each commit should do one thing and explain why.
+| Repo | Role |
+| ------ | ------ |
+| `backend/` | Java + Spring Boot API. Self-referential `Node` domain model stored in Postgres with Flyway migrations. Exposed via a REST API. |
+| `web/` | React + TypeScript SPA (Vite). Consumes the backend REST API and mirrors its explicit layers. |
+| `mobile/` | Planned port of the web app to iOS/Android via React Native (Expo). |
+
+See [docs/repo-briefs.md](docs/repo-briefs.md) for how each repo is shaped inside, and which one owns a given change.
+
+## Quick Start
+
+This meta-repo is cloned/updated with [`mani`](https://github.com/mani-learn/mani), which also lets you run tasks across all repos at once.
+
+```bash
+# Clone all repos and set up this workspace
+mani sync
+```
+
+## Development
+
+Before working in a sub-repo, read its `AGENTS.md`:
+
+- [backend/AGENTS.md](backend/AGENTS.md) — Java/Spring Boot, module map, build commands
+- [web/AGENTS.md](web/AGENTS.md) — React/Vite, module map, build commands
+- [mobile/AGENTS.md](mobile/AGENTS.md) — React Native (Expo), module map, build commands
+
+Run commands across all repos:
+
+```bash
+mani run <task-name>
+```
+
+### Who owns a change
+
+- **API contract changes** → backend first; web and mobile follow.
+- **Cross-cutting concerns shared by web and mobile** → decide in the meta-repo rather than duplicating the fix downstream.
+
+## Architecture & Design
+
+Key decisions are recorded as ADRs in [docs/adr/](docs/adr/):
+
+- [ADR 001 — Self-Referential Node Type](docs/adr/001-node-based-domain-model.md)
+- [ADR 002 — REST over GraphQL](docs/adr/002-rest-over-graphql.md)
+- [ADR 003 — Polyrepo over Monorepo](docs/adr/003-polyrepo-over-monorepo.md)
+- [ADR 004 — React for Frontend](docs/adr/004-react-for-frontend.md)
+
+The domain model is documented in [CONTEXT.md](CONTEXT.md).
