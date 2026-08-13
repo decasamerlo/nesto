@@ -1,6 +1,6 @@
 # Nesto
 
-A personal list-of-lists app for capturing any hierarchical structure — todos, shopping lists, recipes, ideas, exercise logs, diaries — organized as a tree of recursively composable nodes.
+A personal list-of-lists app for capturing any hierarchical structure (todos, shopping lists, recipes, ideas, exercise logs, diaries) organized as a tree of recursively composable nodes.
 
 ## Language
 
@@ -17,7 +17,7 @@ An integer that orders siblings. Positions are auto-assigned on creation, gaps a
 _Avoid_: Order, sort index, rank
 
 **Status**:
-An optional lifecycle state on a node: `OPEN`, `IN_PROGRESS`, or `DONE`. Assigning a status is an explicit, opt-in action — the first status mutation transitions from no status to a tracking state. Valid transitions are any → Open, any non-null → Done, any non-null → In-Progress. Entering tracking from null is opt-in — the first mutation _is_ the choice of state; status jumps directly to the chosen tracking state, never through a null → OPEN intermediate.
+An optional lifecycle state on a node: `OPEN`, `IN_PROGRESS`, or `DONE`. Every transition in the matrix below is valid. Entering tracking from no status is opt-in: the first mutation jumps directly to the chosen state, never through a `null → OPEN` intermediate.
 
 Transition matrix:
 

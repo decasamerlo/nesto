@@ -1,6 +1,6 @@
 # Nesto
 
-A personal list-of-lists app for capturing any hierarchical structure — todos, shopping lists, recipes, ideas, exercise logs, diaries — organized as a tree of recursively composable nodes.
+A personal list-of-lists app for capturing any hierarchical structure (todos, shopping lists, recipes, ideas, exercise logs, diaries) organized as a tree of recursively composable nodes.
 
 This is the **meta-repo**: it tracks shared docs, conventions, and config; it orchestrates the three application repos.
 
