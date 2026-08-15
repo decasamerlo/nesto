@@ -12,9 +12,13 @@ How the four repos use GitHub native stacked PRs (`gh stack`) and fork-based con
 
 **Trunk**: `main`. Single, protected, squash-only.
 
-**Code-owner gate**: Only `decasamerlo` — the owner — can approve a PR into `main`, because only that account is a code owner. The owner's own PRs merge via the bypass list, never by self-approval (GitHub forbids it anyway).
+**Code-owner gate**: A merge into `main` requires an approving review from a code owner. Only `decasamerlo` and `nesto-bot` are code owners, so no approval by anyone else can unlock a merge.
 
-**Co-developer**: Has Write on all four repos, so they build native stacked PRs (same-repo only). Their approvals never satisfy the code-owner gate; the owner's bypass overrides their request-changes.
+**Gatekeeper**: The machine-user account `nesto-bot` (Write on all four repos). Its PAT is held by the owner only. On owner-authored PRs — where the owner cannot self-approve — the gatekeeper's approval is the only way to satisfy the code-owner gate.
+
+**Bypass**: The owner's ruleset bypass ("for pull requests only") merges *non-stacked* PRs. Stacked PRs cannot use it at all: GitHub's async stack merge evaluates every rule for every layer and honors no bypass.
+
+**Co-developer**: Has Write on all four repos, so they build native stacked PRs (same-repo only). Their approvals can never satisfy the code-owner gate, so they can never merge anything into `main`.
 
 **Fork contribution**: An outside PR from a fork to `main`. Never part of a stack — native stacks are same-repo only.
 
@@ -35,13 +39,21 @@ gh stack submit               # one PR per layer, each targeting the layer below
 
 Work in the top layer; `gh stack rebase` / `gh stack sync` keep layers aligned. Metadata lives in `.git/gh-stack` — nothing committed.
 
-## Merging a stack — owner only (bypass)
+## Merging a stack — owner only, via the gatekeeper
 
-1. Bottom-up, one layer at a time. After your approval (or directly, via your bypass) merge the bottom layer — it lands as one squashed commit.
-2. The server-side cascade rebase moves the layers above onto `main` automatically — confirm it completed (upper layers now target `main`) before merging the next layer.
-3. Repeat until no layers remain above `main`. When the whole stack is green and you're confident, `gh stack merge` lands everything at once.
+Stacked PRs never honor the bypass list. Every layer must satisfy the code-owner gate on its own, and on owner-authored layers only the gatekeeper can do that. The owner therefore merges with the one-command flow:
+
+```bash
+scripts/merge-layer.sh <pr-number> [repo]
+```
+
+It approves the PR as `nesto-bot` (`NESTO_BOT_TOKEN` exported from your keyring), then runs `gh stack merge <pr> --yes --squash`, then `gh stack sync` for the cascade rebase. Merge bottom-up, one layer at a time; confirm the upper layers now target `main` before merging the next.
 
 Never force-push someone else's branch. Only push your own layers.
+
+### Emergency escape hatch
+
+If the gatekeeper flow is unavailable (PAT lost, account locked, GitHub outage): unstack the affected layer, merge it as a normal PR via your bypass (async stack merge rules no longer apply once it is not part of a stack), then restack the layers above it. This sacrifices the atomic-stack property for that one merge — use it only when the gatekeeper flow is genuinely blocked.
 
 ## Fork contribution — outside contributors
 
@@ -57,8 +69,10 @@ Never force-push someone else's branch. Only push your own layers.
 | Visibility | public |
 | Merge method | squash only, auto-delete head branches |
 | Ruleset (branch `main`) | require pull request; 1 approval; require code-owner review; non-fast-forward |
-| Bypass list | `decasamerlo`, "for pull requests only" |
-| CODEOWNERS | `* @decasamerlo` |
-| Roles | outside contributors → Read via forks; co-developer → Write (stacks) |
+| Bypass list | `decasamerlo`, "for pull requests only" (non-stacked merges only; stacks ignore it) |
+| CODEOWNERS | `* @decasamerlo @nesto-bot` (in `.github/CODEOWNERS`, all repos) |
+| Gatekeeper | `nesto-bot` machine user, Write, PAT in owner's keyring (`NESTO_BOT_TOKEN`) |
+| Roles | outside contributors → Read via forks; co-developer → Write (stacks); `nesto-bot` → Write (gatekeeper) |
 | Backend extra | CI workflow (Gradle build + tests) as required check |
 | Off | merge queue, "require branches up to date", stale-review dismissal |
+| Unavailable | "restrict who can dismiss reviews" — GitHub silently drops it on personal-account repos; see ADR 006 |
