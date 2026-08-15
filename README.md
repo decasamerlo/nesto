@@ -20,7 +20,7 @@ nesto/
 | `web/` | React + TypeScript SPA (Vite). Consumes the backend REST API and mirrors its explicit layers. |
 | `mobile/` | Planned port of the web app to iOS/Android via React Native (Expo). |
 
-See [docs/repo-briefs.md](docs/repo-briefs.md) for how each repo is shaped inside, and which one owns a given change.
+See [docs/repo-briefs.md](docs/repo-briefs.md) for how each repo is shaped inside, which one owns a given change, and how changes land as stacked, squash-merged PRs.
 
 ## Quick Start
 
@@ -45,11 +45,6 @@ Run commands across all repos:
 mani run <task-name>
 ```
 
-### Who owns a change
-
-- **API contract changes** → backend first; web and mobile follow.
-- **Cross-cutting concerns shared by web and mobile** → decide in the meta-repo rather than duplicating the fix downstream.
-
 ## Architecture & Design
 
 Key decisions are recorded as ADRs in [docs/adr/](docs/adr/):
@@ -58,5 +53,7 @@ Key decisions are recorded as ADRs in [docs/adr/](docs/adr/):
 - [ADR 002 — REST over GraphQL](docs/adr/002-rest-over-graphql.md)
 - [ADR 003 — Polyrepo over Monorepo](docs/adr/003-polyrepo-over-monorepo.md)
 - [ADR 004 — React for Frontend](docs/adr/004-react-for-frontend.md)
+- [ADR 005 — Native Stacked PRs](docs/adr/005-native-stacked-prs.md)
+- [ADR 006 — Contribution and Review Model](docs/adr/006-contribution-and-review-model.md)
 
 The domain model is documented in [CONTEXT.md](CONTEXT.md).

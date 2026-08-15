@@ -10,7 +10,7 @@ This repo is the orchestration hub for three independent repos. It tracks shared
 | `web/` | React + TypeScript SPA (Vite) |
 | `mobile/` | React Native (Expo) — not yet started |
 
-Working inside a sub-repo, or deciding which repo owns a change? Read [docs/repo-briefs.md](docs/repo-briefs.md) first.
+Working inside a sub-repo, deciding which repo owns a change, or opening/merging a PR? Read [docs/repo-briefs.md](docs/repo-briefs.md) first.
 
 ## Agent conventions
 

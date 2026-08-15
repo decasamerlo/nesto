@@ -26,3 +26,7 @@ Full context: [mobile/AGENTS.md](../mobile/AGENTS.md)
 
 - API contract change → backend first; web and mobile follow.
 - Anything both web and mobile need → decide in the meta-repo, don't fix it twice downstream.
+
+## How changes land
+
+Opening, merging, or reviewing a PR in any repo? Read [stacked-prs.md](conventions/stacked-prs.md) first: stacked squash-merged PRs, owner-approval gate, fork flow.
