@@ -2,22 +2,22 @@
 
 A personal list-of-lists app for capturing any hierarchical structure (todos, shopping lists, recipes, ideas, exercise logs, diaries) organized as a tree of recursively composable nodes.
 
-This is the **meta-repo**: it tracks shared docs, conventions, and config; it orchestrates the three application repos.
+This is its **meta-repo**: it tracks shared docs, conventions, and config and orchestrates the three application repos.
 
 ## Repo Structure
 
 ```text
 nesto/
 ├── backend/        Java + Spring Boot API (Hexagonal Architecture)
-├── web/            React + TypeScript SPA (Vite)
+├── web/            React + TypeScript SPA (Vite) — not yet started
 ├── mobile/         React Native (Expo) — not yet started
-└── docs/           Architecture decisions (ADRs), conventions, domain context
+└── docs/           Architecture decisions (ADRs), conventions, domain context, repo briefs
 ```
 
 | Repo | Role |
 | ------ | ------ |
-| `backend/` | Java + Spring Boot API. Self-referential `Node` domain model stored in Postgres with Flyway migrations. Exposed via a REST API. |
-| `web/` | React + TypeScript SPA (Vite). Consumes the backend REST API and mirrors its explicit layers. |
+| `backend/` | Java + Spring Boot API. Self-referential `Node` domain model; storage in Postgres with Flyway migrations is planned. Domain core (`Node`, `NodeId`, `Position`) is implemented; the REST adapter is pending. |
+| `web/` | React + TypeScript SPA (Vite). Planned: consumes the backend REST API and mirrors its explicit layers. |
 | `mobile/` | Planned port of the web app to iOS/Android via React Native (Expo). |
 
 See [docs/repo-briefs.md](docs/repo-briefs.md) for how each repo is shaped inside, which one owns a given change, and how changes land as stacked, squash-merged PRs.

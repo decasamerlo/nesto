@@ -4,11 +4,7 @@ This repo is the orchestration hub for three independent repos. It tracks shared
 
 ## Repos
 
-| Repo | Role |
-|---|---|
-| `backend/` | Java + Spring Boot API (Hexagonal Architecture, Node domain model) |
-| `web/` | React + TypeScript SPA (Vite) |
-| `mobile/` | React Native (Expo) — not yet started |
+`backend/` (Java + Spring Boot API), `web/` (React + TypeScript SPA — not yet started), `mobile/` (React Native/Expo — not yet started). Detailed roles in the [README repo table](README.md).
 
 Working inside a sub-repo, deciding which repo owns a change, or opening/merging a PR? Read [docs/repo-briefs.md](docs/repo-briefs.md) first.
 
@@ -37,7 +33,7 @@ Issues live as local markdown files under `.scratch/<feature-slug>/`. See `docs/
 
 ### Triage labels
 
-The five canonical triage roles use their default label strings. See `docs/agents/triage-labels.md`.
+Triage moves issues through five canonical roles. See `docs/agents/triage-labels.md`.
 
 ### Domain docs
 
