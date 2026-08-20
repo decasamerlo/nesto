@@ -13,3 +13,11 @@ The skills use five canonical triage roles. This file maps those roles to the ac
 When a skill mentions a role (e.g. "apply the AFK-ready triage label"), use the corresponding label string from this table.
 
 Edit the right-hand column to match whatever vocabulary you actually use.
+
+## Additional labels
+
+Labels beyond the five canonical roles:
+
+| Label | Meaning |
+| ----- | ------- |
+| `pending-merge` | Implemented; PR open, waiting to land. Applied when agent work is done and the change awaits review and merge; removed when the issue closes. |
