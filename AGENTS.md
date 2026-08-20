@@ -29,7 +29,7 @@ Default is coach-not-typer: guide me, don't implement for me.
 
 ### Issue tracker
 
-Issues live as local markdown files under `.scratch/<feature-slug>/`. See `docs/agents/issue-tracker.md`.
+Issues live as GitHub issues in this meta-repo (`decasamerlo/nesto`). See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
