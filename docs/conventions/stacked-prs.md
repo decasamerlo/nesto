@@ -12,9 +12,13 @@ How the four repos use GitHub native stacked PRs (`gh stack`) and fork-based con
 
 **Trunk**: `main`. Single, protected, squash-only.
 
-**Code-owner gate**: Only `decasamerlo` — the owner — can approve a PR into `main`, because only that account is a code owner. The owner's own PRs merge via the bypass list, never by self-approval (GitHub forbids it anyway).
+**Code-owner gate**: Only `decasamerlo` — the owner — can approve a PR into `main`, because only that account is a code owner. The owner cannot self-approve (GitHub forbids it), and stacked merges never honor the bypass list — so an own stacked layer can only land by leaving the stack first.
 
-**Co-developer**: Has Write on all four repos, so they build native stacked PRs (same-repo only). Their approvals never satisfy the code-owner gate; the owner's bypass overrides their request-changes.
+**Unstacking**: Removing a branch from the stack with `gh stack modify` (Drop). The local branch and PR are preserved — only the stack membership is severed, which makes the PR a normal PR that the bypass can merge.
+
+**Bypass**: The owner's ruleset bypass ("for pull requests only") merges *non-stacked* PRs. Stacked PRs cannot use it at all: GitHub's async stack merge evaluates every rule for every layer and honors no bypass, admin or otherwise. On non-stacked PRs the CLI only applies it with `gh pr merge --admin` — plain merges still fail the 1-approval and code-owner rules.
+
+**Co-developer**: Has Write on all four repos, so they build native stacked PRs (same-repo only). Their approvals never satisfy the code-owner gate; the owner's bypass overrides their request-changes on non-stacked PRs.
 
 **Fork contribution**: An outside PR from a fork to `main`. Never part of a stack — native stacks are same-repo only.
 
@@ -35,11 +39,17 @@ gh stack submit               # one PR per layer, each targeting the layer below
 
 Work in the top layer; `gh stack rebase` / `gh stack sync` keep layers aligned. Metadata lives in `.git/gh-stack` — nothing committed.
 
-## Merging a stack — owner only (bypass)
+## Merging a stack — owner only, unstack → submit → bypass-merge → rebase
 
-1. Bottom-up, one layer at a time. After your approval (or directly, via your bypass) merge the bottom layer — it lands as one squashed commit.
-2. The server-side cascade rebase moves the layers above onto `main` automatically — confirm it completed (upper layers now target `main`) before merging the next layer.
-3. Repeat until no layers remain above `main`. When the whole stack is green and you're confident, `gh stack merge` lands everything at once.
+Stacked PRs never honor the bypass list, and the owner cannot self-approve — so an own stacked layer cannot merge while it is in the stack. The owner merges bottom-up, one layer at a time:
+
+1. **Unstack the layer**: `gh stack modify` → select the layer → `x` (Drop) → `Ctrl+S`. The branch and PR are preserved; the remaining branches are rebased locally onto their new parents (the layer above ends up based on `main`).
+2. **Submit first, then merge**: `gh stack submit` pushes the rebased branches and recreates the stack on GitHub without the layer — answer **Yes** to "Overwrite the existing stack on GitHub?" This must happen *before* the merge: while the PR is still linked in a GitHub stack, even `--admin` merges are refused (async stack merge API only).
+3. **Merge via bypass, with `--admin`**: `gh pr merge <n> --squash --admin`. The plain `--squash` form fails against the 1-approval and code-owner rules — the CLI does not apply the bypass list automatically; `--admin` is required even on non-stacked PRs.
+4. **Rebase the rest**: `gh stack rebase` fetches the new `main` and re-plays the layers above onto it — each retains its original commits; the squash-merge already put that content on `main`, so the rebase drops the now-empty duplicates. `gh stack sync` works here too.
+5. **Push**: `gh stack push` publishes the rebased branches. Confirm the upper layers now target `main` before merging the next.
+
+Repeat bottom-up until no layers remain above `main`.
 
 Never force-push someone else's branch. Only push your own layers.
 
