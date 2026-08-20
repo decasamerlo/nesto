@@ -39,6 +39,26 @@ gh stack submit               # one PR per layer, each targeting the layer below
 
 Work in the top layer; `gh stack rebase` / `gh stack sync` keep layers aligned. Metadata lives in `.git/gh-stack` — nothing committed.
 
+**Trap — drafts by default.** In a non-interactive terminal, `gh stack submit` skips the editor (acts as `--auto`) and creates new PRs as drafts. Run it interactively, or pass `--open` to submit ready-for-review. If a PR came out as draft, fix with `gh pr ready <n>`.
+
+## Adding a layer to an existing stack
+
+The stack is already open on GitHub — someone else's, or an earlier session's. You want to build on top of it:
+
+```bash
+gh stack checkout <stack>        # by stack number, PR number, PR URL, or branch name
+gh stack add <new-branch>        # from the top layer: creates the branch and checks it out
+gh stack submit                  # creates the PR — verify its base is the layer below
+```
+
+`gh stack add` must run from a stack branch (e.g. the top layer), not the new branch — on the new branch it errors with "current branch is not part of a stack".
+
+**Trap — one layer, one commit.** A layer is one minimal, reviewable unit and one commit (see **Layer** in Vocabulary). A branch that carries two commits lands as a PR with two commits — not a valid layer. Keep each logical change on its own branch and stack them, or squash the branch down to one commit before submitting.
+
+**Trap — `gh stack init` adopts local branches only.** It treats `origin/*`-only branches as missing and creates them from trunk. A later `gh stack submit` force-pushes them back to trunk, empties the diffs, and GitHub closes the PRs. This section checks out first to avoid that.
+
+**Recovery.** If it happens anyway, the old heads usually still exist in the object store: restore each branch with `git branch -f <branch> <old-head>`, push with `git push --force origin <branch>`, and reopen with `gh pr reopen <n>`. Then `gh stack sync`; verify every PR open and every diff non-empty.
+
 ## Merging a stack — owner only, unstack → submit → bypass-merge → rebase
 
 Stacked PRs never honor the bypass list, and the owner cannot self-approve — so an own stacked layer cannot merge while it is in the stack. The owner merges bottom-up, one layer at a time:
@@ -51,7 +71,7 @@ Stacked PRs never honor the bypass list, and the owner cannot self-approve — s
 
 Repeat bottom-up until no layers remain above `main`.
 
-Never force-push someone else's branch. Only push your own layers.
+Push only your own layers; never force-push someone else's branch.
 
 ## Fork contribution — outside contributors
 
