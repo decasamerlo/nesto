@@ -24,7 +24,7 @@ How the four repos use GitHub native stacked PRs (`gh stack`) and fork-based con
 
 ## Branch naming
 
-`<type>/<slug>`, e.g. `feat/node-domain-entity`, `fix/recurrence-rollover`, `docs/stacked-prs`. Types: `feat`, `fix`, `docs`, `chore`. No issue numbers.
+`<type>/<issue-number>-<slug>`, e.g. `feat/42-node-domain-entity`, `fix/7-recurrence-rollover`, `docs/3-stacked-prs`. Types: `feat`, `fix`, `docs`, `chore`. Issue number before the slug.
 
 ## Building a stack — owner or co-developer (Write)
 
@@ -55,7 +55,7 @@ Never force-push someone else's branch. Only push your own layers.
 
 ## Fork contribution — outside contributors
 
-1. Fork the repo, branch off `main` (`<type>/<slug>`).
+1. Fork the repo, branch off `main` (`<type>/<issue-number>-<slug>`).
 2. Open the PR to `main`.
 3. The owner reviews (code-owner gate) and merges with squash. The reviewer user's review is advisory — it never blocks or unblocks the merge.
 4. First-time contributors: the owner approves running CI on the fork PR before it executes.
