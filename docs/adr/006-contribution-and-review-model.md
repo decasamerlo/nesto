@@ -4,20 +4,20 @@ Status: accepted
 
 ## Context
 
-All four repos are public. Contributors open PRs; nobody commits to `main` directly. A second user (northoncardoso) reviews and contributes, but their reviews must never block or unblock merges — only the repo owner's approval or manual merge decides. GitHub cannot require approval from a specific user, so the gate must be built from code-owner review + roles.
+All four repos are public. Contributors open PRs; nobody commits to `main` directly. The co-developer reviews and contributes, but their reviews must never decide merges — only the repo owner's approval or manual merge does. GitHub cannot require approval from a specific user, so the gate must be built from code-owner review + roles — the **code-owner gate**.
 
 ## Decision
 
-- **Public repos, fork-based contribution.** Contributors have no write access; they fork and open PRs to `main`. Fork PRs cannot be stacked (native stacks are same-repo only).
-- **northoncardoso gets Triage** on all four repos. Verified GitHub mechanics: Triage approvals never count toward required approvals (only write/admin count) and Triage "request changes" never blocks merging. His reviews are advisory by construction.
-- **`CODEOWNERS` = `decasamerlo` in every repo.** Rulesets on `main` require a pull request, 1 approval, and review from code owners — since only the owner has write, only the owner's approval satisfies the gate. Authors cannot self-approve, so stacked PRs of the owner are merged via bypass, never by approval.
-- **Ruleset bypass list: `decasamerlo`, "for pull requests only".** Even the owner must open PRs; the bypass only grants the right to merge (including own PRs), never direct pushes to `main`.
+- **Public repos, two contributor classes.** Outside contributors have no write access; they fork and open PRs to `main`. Fork PRs cannot be stacked (see ADR 005). The co-developer has **Write** on all four repos, which is what native stacked PRs require — stacking is same-repo only (ADR 005). Write grants them push access to their own branches and merge permission within the ruleset, but their reviews still cannot satisfy the code-owner gate.
+- **Review weight comes from the code-owner gate, not from role grants.** Only the code owner's review satisfies the required review, so neither the co-developer's Write approval nor a Read user's review can complete the gate. Write approval counts toward the 1-approval rule but the gate stays unmet; a Read user's review never counts at all (only write/admin approvals count). A non-owner's request-changes can be dismissed, and the owner's bypass overrides it outright.
+- **`CODEOWNERS` = `decasamerlo` in every repo.** Rulesets on `main` require a pull request, 1 approval, and review from code owners — since only the owner is a code owner, only the owner's approval satisfies the code-owner gate. Authors cannot self-approve, so the owner's stacked PRs are merged via bypass, never by approval.
+- **Ruleset bypass list: `decasamerlo`, "for pull requests only".** Even the owner must open PRs; the bypass only grants the right to merge (including their own PRs), never direct pushes to `main`.
 - **Rulesets, not classic branch protection.** Same rule shape on all four repos; backend additionally requires its CI check.
 - No merge queue, no "require branches up to date", stale-review dismissal off — the owner is the merger, so the final state is in their hands.
 
 ## Consequences
 
-- Nothing merges into `main` without the owner: a contributor's PR needs the owner's approval; the owner's own PRs need the owner's manual merge.
-- The reviewer user can review, approve, request changes, and comment freely — none of it affects mergeability.
-- Public repos mean anyone may open a PR; each is vetted by the owner's review before merging.
-- The owner's own work never blocks on approval; if they want a second pair of eyes, they request Northon's review manually.
+- Read-only reviewers and outside contributors can review, approve, request changes, and comment freely — none of it counts or blocks.
+- The co-developer's reviews do move the mergeability state (approval counts toward the 1-approval rule, request-changes blocks until dismissed), but never decide the merge: the owner's approval (or bypass) is still required, and the owner can dismiss any request-changes.
+- The co-developer's PRs to `main` still need the owner's approval (or bypass). Co-developer stacked PRs are subject to the cascade rebase like anyone else's.
+- The owner's own work never blocks on approval; if they want a second pair of eyes, they request a reviewer's review manually.
