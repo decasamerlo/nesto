@@ -1,6 +1,6 @@
 # Stacked PRs Workflow
 
-How the four repos use GitHub native stacked PRs (`gh stack`) and fork-based contribution. Decisions behind this: [ADR 005](../adr/005-native-stacked-prs.md), [ADR 006](../adr/006-contribution-and-review-model.md).
+How the four repos use GitHub native stacked PRs (`gh stack`), reference issues across repo boundaries, and handle fork-based contribution. Decisions behind this: [ADR 005](../adr/005-native-stacked-prs.md), [ADR 006](../adr/006-contribution-and-review-model.md).
 
 ## Vocabulary
 
@@ -24,7 +24,27 @@ How the four repos use GitHub native stacked PRs (`gh stack`) and fork-based con
 
 ## Branch naming
 
-`<type>/<issue-number>-<slug>`, e.g. `feat/42-node-domain-entity`, `fix/7-recurrence-rollover`, `docs/3-stacked-prs`. Types: `feat`, `fix`, `docs`, `chore`. Issue number before the slug.
+`<type>/<issue-number>-<slug>`, e.g. `feat/42-node-domain-entity`, `fix/7-recurrence-rollover`, `docs/3-stacked-prs`. Types: `feat`, `fix`, `docs`, `chore`. Issue number before the slug — always a meta-repo (`decasamerlo/nesto`) issue number, including on a branch in a sub-repo.
+
+## Referencing issues
+
+GitHub's `#N` shorthand is repo-local — it resolves against the repo the text lives in — and with the work split between the meta-repo and its sub-repos, most references cross a boundary.
+
+**A reference that crosses a repo boundary is written `owner/repo#N`.** A meta-repo issue cited from a sub-repo is `decasamerlo/nesto#42`; a sub-repo PR cited from the meta-repo is `decasamerlo/nesto-backend#7`.
+
+**A reference within the same repo stays bare `#N`.** A layer pointing at the layer below it is same-repo, so `Stacked on #8.` in a `nesto-backend` PR is correct as written — as is `Closes #N.` on a PR sitting in the same repo as its issue.
+
+**Trap — a wrong bare reference is silent.** A bare `#N` with no matching item renders as plain text — no link, no error — and it starts resolving to a real but unrelated item as soon as that repo's numbering reaches `N`.
+
+**A sub-repo PR body opens with its closing line**, `Closes decasamerlo/nesto#N.`
+
+- **`Closes` is the only closing verb this project uses.** `Implements` is retired: GitHub does not treat it as a closing keyword, so the verb itself never closed anything — those issues closed through hand-made Development-panel links, which this rule replaces.
+- **`Refs` is the inert form** — for a layer that contributes to an issue without finishing it: `Refs decasamerlo/nesto#N.`
+- **One issue, one `Closes`, on the layer that completes it.** Lower layers carrying part of it use `Refs`.
+- **The keyword only fires from a PR based on `main`.** GitHub ignores closing keywords on a PR targeting any other branch — no link is created, and merging has no effect on the issue. A layer still based on the layer below is therefore inert; the merge procedure below retargets each layer to `main` before it merges — step 5 is where you confirm it — which is what makes the issue close exactly when the work lands.
+- **An outside contributor's closing line is intent, not automation.** Closing an issue across a repo boundary needs write access to the repo holding it, which a fork contributor does not have. They still open with `Closes decasamerlo/nesto#N.`; the owner closes the issue when the PR merges.
+- **The PR body is the single source of truth for the issue → PR link.** GitHub derives the Development-panel entry from it — never create that entry by hand.
+- **A pasted full issue URL is equivalent, not preferred.** GitHub renders it as the same `owner/repo#N` anchor, and both forms follow repo renames — the short form is the convention.
 
 ## Building a stack — owner or co-developer (Write)
 

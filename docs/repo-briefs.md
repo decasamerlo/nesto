@@ -29,4 +29,4 @@ Full context: [mobile/AGENTS.md](../mobile/AGENTS.md)
 
 ## How changes land
 
-Opening, merging, or reviewing a PR in any repo? Read [stacked-prs.md](conventions/stacked-prs.md) first: stacked squash-merged PRs, owner-approval gate, fork flow.
+Opening, merging, or reviewing a PR in any repo? Read [stacked-prs.md](conventions/stacked-prs.md) first: stacked squash-merged PRs, owner-approval gate, cross-repo issue references, fork flow.
