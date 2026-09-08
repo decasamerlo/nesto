@@ -16,3 +16,27 @@ tasks:
   hello:
     desc: Print Hello World
     cmd: echo "Hello World"
+
+  install-hooks:
+    desc: Symlink the prepare-commit-msg hook into every project
+    cmd: |
+      set -eu
+      root=$PWD
+      while [ ! -f "$root/mani.yaml" ]; do
+        [ "$root" != / ] || { echo "no mani.yaml above $PWD" >&2; exit 1; }
+        root=$(dirname "$root")
+      done
+      hook=$root/.githooks/prepare-commit-msg
+      [ -f "$hook" ] || { echo "missing $hook" >&2; exit 1; }
+      hooks=$(git rev-parse --git-path hooks)
+      mkdir -p "$hooks"
+      dest=$hooks/prepare-commit-msg
+      # ln -sfn replaces whatever is there without a word. Re-linking our own
+      # symlink is the normal case and stays quiet; anything else — a repo's
+      # own hook, a link somewhere else — is worth one line before it goes.
+      if { [ -e "$dest" ] || [ -L "$dest" ]; } &&
+        [ "$(readlink "$dest" || true)" != "$hook" ]; then
+        echo "warning: replacing existing $dest" >&2
+      fi
+      ln -sfn "$hook" "$dest"
+      echo "$PWD -> $dest"

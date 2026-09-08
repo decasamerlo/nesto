@@ -65,3 +65,42 @@ Refs: decasamerlo/nesto#29                <- nesto issue 29
 **Trap — the requirement follows the branch name, not the issue link.** A branch named off-convention (`fix-thing`, `52-commits`) exempts itself silently, and a conforming branch records the number its *name* claims rather than the issue its PR actually closes. Nothing reconciles the two.
 
 **What a trip-wire can and cannot see.** `git log --grep='^Refs:'` lists the commits that carry a trailer, and nothing more. It cannot show which commits *should* have carried one: branches are deleted on merge and a squash commit records only `(#N)`, a PR number, so reading a branch name back off `main` takes `gh pr view <N> --json headRefName`. Nor can it separate a right issue number from a wrong one — the number comes from the branch name by the rule above, so any check rooted there agrees with itself. Reconciling the number means comparing the trailer against the `Closes` line in the PR body, the one place the two are stated independently.
+
+## The hook
+
+`.githooks/prepare-commit-msg` derives the trailer from the branch name, so it is generated rather than remembered — including the reference form, which it reads off `remote.origin.url`: bare in the meta-repo, qualified in every other repo. Git does not distribute hooks and two of the four repos are still scaffolds, so a `mani` task installs it everywhere:
+
+```bash
+mani run install-hooks --all --ignore-non-existing
+```
+
+It symlinks the meta-repo's copy into each project's `.git/hooks/`, so editing the one script reaches every repo at once. Run it again after `mani sync` clones a repo for the first time.
+
+**A branch that doesn't match is a no-op**, which is the whole of the dependabot exemption. `--no-verify` does not skip the hook either — that flag bypasses `pre-commit` and `commit-msg` only. One side effect to know: saving the editor without typing anything commits with the trailer as the subject, where git would otherwise abort on an empty message.
+
+**Trap — an extra `Refs:` line goes above the generated one.** The hook runs `git interpret-trailers --if-exists replace`, which rewrites the *last* `Refs:` line in the block. A second issue added below the generated line is overwritten on the next amend; added above it, both survive.
+
+**Trap — an interactive-rebase squash leaves one `Refs:` per squashed commit.** A rebase runs with a detached HEAD, so the hook finds no branch name and exits without touching the message; git concatenates the originals, trailers and all. Prune to one in the editor git opens, or squash with `git reset --soft HEAD~<n> && git commit`, which builds a fresh message and picks up exactly one trailer.
+
+**Trap — a custom `commit.template` moves the trailer into the comment block.** The hook keeps the trailer off the subject line by checking that line 1 is empty, which is what the default template gives it. A template whose first line is a comment is read as the subject instead, so the trailer is written among the template's comments and the separation never runs — saving without typing then commits `Refs: <reference>` as the subject. Nothing in these repos sets `commit.template`; this is for whoever does.
+
+**The behaviour above is tested, not asserted.** `tests/prepare-commit-msg.test.sh` builds a throwaway repo per case, symlinks the hook in exactly as the `mani` task does, commits for real, and reads back the message git stored — both reference forms, the branch-name exemptions, one trailer surviving repeated amends, `--no-verify`, the editor path, and the detached-HEAD no-op. It points `GIT_CONFIG_GLOBAL` and `GIT_CONFIG_SYSTEM` at `/dev/null`, so nobody's personal `commit.template` can change the result:
+
+```bash
+tests/prepare-commit-msg.test.sh
+```
+
+## Reading the trailer
+
+Keeping the reference out of the subject costs nothing but its visibility in a default `git log --oneline`. This format puts it back:
+
+```bash
+git log --format='%h %s  %(trailers:key=Refs,valueonly,separator=%x2C )'
+```
+
+```text
+<sha> chore: generate the meta-issue trailer from the branch name  #52
+<sha> docs: reference issues across repos as owner/repo#N
+```
+
+The separator is load-bearing: left out, it defaults to a newline, so a commit carrying two references breaks the one-line format. A commit with no trailer prints a bare subject.
