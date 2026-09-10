@@ -97,10 +97,18 @@ Push only your own layers; never force-push someone else's branch.
 
 ## Fork contribution — outside contributors
 
-1. Fork the repo, branch off `main` (`<type>/<issue-number>-<slug>`).
-2. Open the PR to `main`.
-3. The owner reviews (code-owner gate) and merges with squash. The reviewer user's review is advisory — it never blocks or unblocks the merge.
-4. First-time contributors: the owner approves running CI on the fork PR before it executes.
+**Work inside the meta-repo layout, never a standalone sub-repo clone.** Clone `nesto`, run `mani sync`, and work in the directory of the repo you are changing — a sub-repo beneath the root, or the root itself for the meta-repo. That layout is what brings `docs/conventions/` and the meta-repo's domain and agent docs within reach, and what the hook install in [commits.md](commits.md) runs from. Fork and open the pull request against that same repo — a pull request to a sub-repo cannot originate from a meta-repo fork.
+
+**Trap — a standalone clone fails silently.** Nothing validates the layout, and both first symptoms are indirect:
+
+- The `../AGENTS.md` pointer in a sub-repo's own context file resolves outside the repository.
+- Commits land with no `Refs:` trailer, because the hook was never installed.
+
+1. Fork the repo you are changing, then branch off `main` (`<type>/<issue-number>-<slug>`) in its directory under the layout.
+2. Add your fork as a second remote and push the branch there — `origin` stays the canonical repo, which outside contributors only have Read on: `git remote add fork git@github.com:<you>/<repo>.git`, then `git push -u fork <branch>`.
+3. Open the PR to `main`, from your fork's branch.
+4. The owner reviews (code-owner gate) and merges with squash. The reviewer user's review is advisory — it never blocks or unblocks the merge.
+5. First-time contributors: the owner approves running CI on the fork PR before it executes.
 
 ## Configuration summary (applied to all four repos)
 

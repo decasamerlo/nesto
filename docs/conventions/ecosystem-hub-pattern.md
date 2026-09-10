@@ -12,3 +12,5 @@ The meta-repo root is a routing table: repos and their roles, plus pointers to d
 ## Standalone clone caveat
 
 If a sub-repo is cloned outside the meta-repo structure, it only has access to content committed inside itself. Anything repo-specific that needs to survive a standalone clone (e.g., backend-specific conventions) lives inside that repo's own `AGENTS.md`.
+
+That describes what a bare clone can see, not a supported way to work — contributing from one is ruled out by [Fork contribution](stacked-prs.md#fork-contribution--outside-contributors). The caveat still holds: the sub-repos are public, anyone can clone one on its own, and its `AGENTS.md` is what reads correctly when they do.
