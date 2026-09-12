@@ -57,5 +57,7 @@ Key decisions are recorded as ADRs in [docs/adr/](docs/adr/):
 - [ADR 006 — Contribution and Review Model](docs/adr/006-contribution-and-review-model.md)
 - [ADR 007 — Immutable Node Entity](docs/adr/007-immutable-node-entity.md)
 - [ADR 009 — Soft Delete with Subtree Restore](docs/adr/009-soft-delete-with-subtree-restore.md)
+- [ADR 010 — The Node Persistence Seam](docs/adr/010-node-persistence-seam.md)
+- [ADR 011 — No Conflict Detection in v1](docs/adr/011-no-conflict-detection-in-v1.md)
 
 The domain model is documented in [CONTEXT.md](CONTEXT.md).
