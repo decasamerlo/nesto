@@ -24,7 +24,7 @@ How the four repos use GitHub native stacked PRs (`gh stack`), reference issues 
 
 ## Branch naming
 
-`<type>/<issue-number>-<slug>`, e.g. `feat/42-node-domain-entity`, `fix/7-recurrence-rollover`, `docs/3-stacked-prs`. Types: `feat`, `fix`, `docs`, `chore`. Issue number before the slug — always a meta-repo (`decasamerlo/nesto`) issue number, including on a branch in a sub-repo.
+`<type>/<issue-number>-<slug>`, e.g. `feat/42-node-domain-entity`, `fix/7-recurrence-rollover`, `docs/3-stacked-prs`. Types: `feat`, `fix`, `docs`, `chore`, `build`. Issue number before the slug — always a meta-repo (`decasamerlo/nesto`) issue number, including on a branch in a sub-repo.
 
 ## Referencing issues
 
@@ -45,6 +45,8 @@ GitHub's `#N` shorthand is repo-local — it resolves against the repo the text 
 - **An outside contributor's closing line is intent, not automation.** Closing an issue across a repo boundary needs write access to the repo holding it, which a fork contributor does not have. They still open with `Closes decasamerlo/nesto#N.`; the owner closes the issue when the PR merges.
 - **The PR body is the single source of truth for the issue → PR link.** GitHub derives the Development-panel entry from it — never create that entry by hand.
 - **A pasted full issue URL is equivalent, not preferred.** GitHub renders it as the same `owner/repo#N` anchor, and both forms follow repo renames — the short form is the convention.
+
+**A commit carries the same reference as an inert `Refs:` trailer**, never a closing keyword — the commit body is what lands on `main`, so closing from there would credit the commit and cost the issue → PR link. See [commits.md](commits.md).
 
 ## Building a stack — owner or co-developer (Write)
 

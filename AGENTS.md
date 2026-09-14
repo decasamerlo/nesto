@@ -38,3 +38,7 @@ Two category roles and six state roles, one of them (`pending-merge`) local to t
 ### Domain docs
 
 Single-context layout: `CONTEXT.md` at the root, ADRs in `docs/adr/`. See `docs/agents/domain.md`.
+
+### Commit conventions
+
+Conventional Commits, plus a `Refs:` trailer naming the meta-repo issue on any issue-numbered branch. See `docs/conventions/commits.md`.
