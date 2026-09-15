@@ -76,6 +76,8 @@ mani run install-hooks --all --ignore-non-existing
 
 It symlinks the meta-repo's copy into each project's `.git/hooks/`, so editing the one script reaches every repo at once. Run it again after `mani sync` clones a repo for the first time.
 
+**The install is checkable.** `scripts/verify-layout.sh` reports, per project, whether the hook is installed and would actually run — including the dangling symlink git skips without a word, which is the one broken state that looks installed. See [Verifying the layout](stacked-prs.md#verifying-the-layout).
+
 **A branch that doesn't match is a no-op**, which is the whole of the dependabot exemption. `--no-verify` does not skip the hook either — that flag bypasses `pre-commit` and `commit-msg` only. One side effect to know: saving the editor without typing anything commits with the trailer as the subject, where git would otherwise abort on an empty message.
 
 **Trap — an extra `Refs:` line goes above the generated one.** The hook runs `git interpret-trailers --if-exists replace`, which rewrites the *last* `Refs:` line in the block. A second issue added below the generated line is overwritten on the next amend; added above it, both survive.

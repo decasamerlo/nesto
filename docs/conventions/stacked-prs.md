@@ -99,16 +99,56 @@ Push only your own layers; never force-push someone else's branch.
 
 **Work inside the meta-repo layout, never a standalone sub-repo clone.** Clone `nesto`, run `mani sync`, and work in the directory of the repo you are changing — a sub-repo beneath the root, or the root itself for the meta-repo. That layout is what brings `docs/conventions/` and the meta-repo's domain and agent docs within reach, and what the hook install in [commits.md](commits.md) runs from. Fork and open the pull request against that same repo — a pull request to a sub-repo cannot originate from a meta-repo fork.
 
-**Trap — a standalone clone fails silently.** Nothing validates the layout, and both first symptoms are indirect:
+**Trap — a standalone clone fails silently.** Both first symptoms are indirect, and neither one points back at the layout:
 
 - The `../AGENTS.md` pointer in a sub-repo's own context file resolves outside the repository.
 - Commits land with no `Refs:` trailer, because the hook was never installed.
 
+[`scripts/verify-layout.sh`](#verifying-the-layout) is the loud version of both — one command, run before you start work.
+
 1. Fork the repo you are changing, then branch off `main` (`<type>/<issue-number>-<slug>`) in its directory under the layout.
 2. Add your fork as a second remote and push the branch there — `origin` stays the canonical repo, which outside contributors only have Read on: `git remote add fork git@github.com:<you>/<repo>.git`, then `git push -u fork <branch>`.
-3. Open the PR to `main`, from your fork's branch.
-4. The owner reviews (code-owner gate) and merges with squash. The reviewer user's review is advisory — it never blocks or unblocks the merge.
-5. First-time contributors: the owner approves running CI on the fork PR before it executes.
+3. Check the setup before committing anything — `../scripts/verify-layout.sh` from a sub-repo directory, `scripts/verify-layout.sh` from the meta-repo root.
+4. Open the PR to `main`, from your fork's branch.
+5. The owner reviews (code-owner gate) and merges with squash. The reviewer user's review is advisory — it never blocks or unblocks the merge.
+6. First-time contributors: the owner approves running CI on the fork PR before it executes.
+
+## Verifying the layout
+
+`scripts/verify-layout.sh` checks the three states the layout has to be in, and names which one is wrong when it is not. Run it after `mani sync`, after the hook install, and before starting work. The walk it opens with starts at the current directory, so it runs from anywhere inside the layout — but the path you type is relative to where you are:
+
+```bash
+scripts/verify-layout.sh       # from the meta-repo root
+../scripts/verify-layout.sh    # from a sub-repo directory
+```
+
+| State | What has to be true |
+| --- | --- |
+| `layout` | `mani.yaml` is somewhere above this directory, and every project it declares that exists on disk is a clone of its own |
+| `origin` | `origin` is the canonical repo `mani.yaml` declares for that directory |
+| `hook` | the project's `prepare-commit-msg` is a symlink resolving to an executable `.githooks/prepare-commit-msg` |
+
+One run reports the whole workspace: a row per project per state, `skip` for a repo that is declared but not cloned, and a nonzero exit if any row failed. It opens with the same parent walk `install-hooks` does — duplicated rather than shared, because that walk is what finds the script in the first place, so the two are marked to change together.
+
+**It reports the workspace it is standing in.** Run from a linked worktree of the meta-repo, the sub-repos are not beneath it and every one of them is a `skip`: truthful about that checkout, and no statement at all about the main one. Run it there too.
+
+**It checks `origin`, and never looks for the fork.** Step 2 above has outside contributors add their fork as a *second* remote precisely so `origin` keeps pointing at the canonical repo — which is what makes this check meaningful for them rather than hostile. It is also what the hook reads to decide between a bare and a qualified reference, so an install step that repointed `origin` would change the trailers too.
+
+**Trap — a dangling hook symlink is the state that most resembles a working one.** `[ -e ]` is false for a symlink whose target is gone, and git skips such a hook without a word, so the one state that looks most like "installed" is the one that silently does nothing. The check tests `[ -L ]` as well — the same care `mani.yaml`'s install guard takes on the write side. Deleting the checkout a link points into is how it happens.
+
+**A linked worktree shares one hooks directory with the checkout that owns the repository**, so the live hook there is legitimately that checkout's file and not the one beside the `mani.yaml` the walk found. The check accepts the hook of *any* checkout of the meta-repo and names the file it resolved to — while still refusing an unrelated project's `.githooks/prepare-commit-msg`, which it tells apart by the common git directory the two checkouts would share.
+
+**Decided: a script, not a `mani` task.** `mani run` executes a task once per project, so one layout problem would be reported once per repo — and the check has to work for someone who has cloned the meta-repo but not yet installed `mani`. **`install-hooks` does not run it either.** The install writes and the check reads; keeping them apart is what lets the check be run on its own, repeatedly, by someone who has changed nothing.
+
+**CI is out of scope**, and not only because there is none yet: the layout is a property of a contributor's machine rather than of a pushed branch, so a green pipeline could never stand in for this.
+
+**The behaviour above is tested.** `tests/verify-layout.test.sh` builds a throwaway layout per case — the negative ones especially: no `mani.yaml` above, a fork as `origin`, no hook, a dangling hook symlink, a hook copied instead of linked, a hook belonging to another repository, a directory that is not a clone of its own — and asserts on the row rather than the exit status, so a failure has to keep naming *which* state is wrong:
+
+```bash
+tests/verify-layout.test.sh
+```
+
+**What it cannot see.** It reads `mani.yaml`, not GitHub: a repo renamed there but not in the manifest passes, and so does a hook whose contents were edited locally. It answers for the machine it runs on, and nothing reconciles that with what another contributor's machine says.
 
 ## Configuration summary (applied to all four repos)
 
