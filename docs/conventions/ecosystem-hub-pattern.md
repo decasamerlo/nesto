@@ -7,10 +7,12 @@ The meta-repo root is a routing table: repos and their roles, plus pointers to d
 - **Root `AGENTS.md`** — short hub: repos, agent conventions, orchestration pointer, coach mode. Only what agents can't infer from the code.
 - **`docs/repo-briefs.md`** — one short paragraph per repo (how it's shaped inside, which changes it owns) plus a link to that repo's own `AGENTS.md`.
 - **`docs/conventions/` and `docs/adr/`** — live once at the top for anything true across repos.
-- **Each sub-repo's `AGENTS.md`** — scoped to that repo only: build commands, module map, stack-specific notes. Inherits shared context from the root to avoid drift.
+- **Each sub-repo's `AGENTS.md`** — scoped to that repo only: build commands, module map, stack-specific notes. Inherits shared context from the root to avoid drift, with the one exception below.
 
 ## Standalone clone caveat
 
 If a sub-repo is cloned outside the meta-repo structure, it only has access to content committed inside itself. Anything repo-specific that needs to survive a standalone clone (e.g., backend-specific conventions) lives inside that repo's own `AGENTS.md`.
+
+**One shared convention is deliberately exempt, and it is the only one.** [non-public-sources.md](non-public-sources.md) is copied verbatim into every sub-repo's `AGENTS.md` instead of being inherited, because what a sub-repo agent does without it — publish something that cannot be taken back — is not recoverable the way a missing build command is. A pointer would not do: a standalone clone cannot follow it, and a link an agent cannot open tells it that a constraint exists without telling it what the constraint is, which invites a guess. The copies can drift; the convention file stays canonical. [ADR 012](../adr/012-precedent-without-evidence.md) records the trade-off.
 
 That describes what a bare clone can see, not a supported way to work — contributing from one is ruled out by [Fork contribution](stacked-prs.md#fork-contribution--outside-contributors). The caveat still holds: the sub-repos are public, anyone can clone one on its own, and its `AGENTS.md` is what reads correctly when they do.
