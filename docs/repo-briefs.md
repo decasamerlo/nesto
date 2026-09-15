@@ -1,6 +1,6 @@
 # Repo Briefs
 
-Stacks live in the root [AGENTS.md](../AGENTS.md) table. This file carries what the table can't: how each repo is shaped inside, and which one owns a change.
+Stacks live in the [README repo table](../README.md). This file carries what the table can't: how each repo is shaped inside, and which one owns a change.
 
 ## backend (nesto-backend)
 
