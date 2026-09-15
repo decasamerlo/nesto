@@ -22,22 +22,26 @@ An integer that orders siblings. A node's position is supplied by its creator (t
 _Avoid_: Order, sort index, rank
 
 **Status**:
-An optional lifecycle state on a node: `OPEN`, `IN_PROGRESS`, or `DONE`. Every transition in the matrix below is valid. Giving a status-less node a status is opt-in: the first mutation jumps straight to the chosen state, never through a `null → OPEN` intermediate.
+An optional lifecycle state on a node: `OPEN`, `IN_PROGRESS`, or `DONE`. The matrix below is total — every transition is valid and none is ever rejected. Giving a status-less node a status is opt-in: the first mutation jumps straight to the chosen state rather than passing through `OPEN`. Leaving is equally free — a tracked node can return to untracked at any time.
 
 Transition matrix:
 
 ```text
-FROM    →  OPEN  IN_PROGRESS  DONE
-null            ✓        ✓        ✓
-OPEN           ✓        ✓        ✓
-IN_PROGRESS    ✓        ✓        ✓
-DONE           ✓        ✓        ✓
+FROM \ TO     untracked  OPEN  IN_PROGRESS  DONE
+untracked         ✓       ✓         ✓        ✓
+OPEN              ✓       ✓         ✓        ✓
+IN_PROGRESS       ✓       ✓         ✓        ✓
+DONE              ✓       ✓         ✓        ✓
 ```
 
 _Avoid_: State, workflow, phase
 
+**Completion time**:
+The instant a node's status became `DONE`, held in `completedAt`. Set on any transition into `DONE` and cleared on any transition out of it, so a node carries at most one completion time and never a stale one. A node that has never been `DONE` has none. No record of past completions is kept anywhere — clearing discards the instant, and nothing else retains it.
+_Avoid_: Finished at, closed at, done date
+
 **Recurrence**:
-An optional schedule attached to a node. It defines a recurring cycle that periodically resets the node's status to OPEN and recomputes its dates. The domain provides `rollOverForNextOccurrence(Clock)`; a scheduled job finds due nodes and invokes it.
+An optional schedule attached to a node. It defines a recurring cycle that periodically resets the node's status to OPEN and recomputes its dates.
 _Avoid_: Repeating, schedule, template
 
 **Status summary**:
