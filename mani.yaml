@@ -21,6 +21,9 @@ tasks:
     desc: Symlink the prepare-commit-msg hook into every project
     cmd: |
       set -eu
+      # This parent walk is duplicated in scripts/verify-layout.sh, which
+      # cannot call out to a shared copy: the walk is what locates the script.
+      # The two change together.
       root=$PWD
       while [ ! -f "$root/mani.yaml" ]; do
         [ "$root" != / ] || { echo "no mani.yaml above $PWD" >&2; exit 1; }
