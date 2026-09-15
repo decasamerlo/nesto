@@ -30,18 +30,36 @@ Omit the scope when a change has no single home; don't invent one.
 
 Prose explaining *why*, not a restatement of the diff — the diff is already in the commit. **Wrap it at 72 columns.** `git log` indents a body by four spaces and never reflows it, so 72 still fits an 80-column terminal while an unwrapped paragraph comes out as one 200-character line. Twenty of the thirty commits on the meta-repo's `main` already wrap, between 63 and 70; the nine that don't are recent drift, not the standard.
 
-The body carries more weight here than in most repos. Both repos squash-merge with `squash_merge_commit_message: COMMIT_MESSAGES`, so **the commit body is what lands on `main` verbatim** and the PR description reaches no commit at all. Reasoning that history should keep goes in the body; reasoning aimed at the reviewer goes in the PR.
+The body carries more weight here than in most repos. Both repos squash-merge with `squash_merge_commit_message: COMMIT_MESSAGES`, so **the commit body is what lands on `main`** and the PR description reaches no commit at all. Reasoning that history should keep goes in the body; reasoning aimed at the reviewer goes in the PR. Near-verbatim, not verbatim — the squash trap below has the one exception.
 
 ## The `Refs:` trailer
 
 **A commit carries `Refs:` exactly when its branch matches `^(build|chore|docs|feat|fix)/[0-9]+-[a-z0-9-]+$`**, taking the issue number from that match. Any other branch carries none — which is how `dependabot/*` is exempt, with no bot or author special-casing anywhere.
 
-**It sits in the message's final paragraph, on its own line**, so both `git interpret-trailers --parse` and `%(trailers:key=Refs)` resolve it. One issue per line, key repeated:
+**It sits in the message's final paragraph, on its own line, and stops being a trailer the moment the PR is squashed.** In the commit as written, `git interpret-trailers --parse` and `%(trailers:key=Refs)` both resolve it; on `main` neither does, for the reason the trap below gives. One issue per line, key repeated:
 
 ```text
 Refs: #52
 Refs: #49
 ```
+
+**Trap — squash merge demotes the trailer, and the writing side cannot prevent it.** GitHub's squash strips `Co-Authored-By` from wherever it sits, normalises it to `Co-authored-by`, and re-appends it after a blank line. That blank line opens a new final paragraph; git parses trailers only from the last one, so `Refs:` is stranded in the second-to-last and stops being a trailer:
+
+```text
+Refs: #64          <- stranded: second-to-last paragraph, no longer a trailer
+
+Co-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>
+```
+
+**The writing side has two levers, and both are spent.** Authoring the co-author line *above* `Refs:` was tried deliberately on PR #66; writing that order automatically is what the hook already does, since `interpret-trailers --if-exists replace` appends below a co-author line that is already there. PR #71 reached GitHub with `Refs: #64` last and resolving, and came out of the squash with the co-author line below it. Attribution requires that line, so no third ordering exists. The tally is 8 of 8 as of `0b59328`, and every commit carrying a trailer also carries a co-author line, so in practice the failure is total.
+
+Head branches are deleted on merge, so the pre-squash message is not in the object store; read it back from the PR instead, which is what makes the paragraph above checkable:
+
+```bash
+gh api repos/decasamerlo/nesto/pulls/71/commits --jq '.[].commit.message'
+```
+
+**Only the machine-readable claim breaks.** The reference survives as text, so the historical record is intact and no commit needs rewriting. What fails is tooling that reads the trailer as a trailer — which is the stated reason the convention exists. Read it as text instead: [Reading the reference](#reading-the-reference).
 
 **The reference form is the one [stacked-prs.md](stacked-prs.md#referencing-issues) sets** — bare `#N` inside the meta-repo, `decasamerlo/nesto#N` from a sub-repo.
 
@@ -90,17 +108,41 @@ It symlinks the meta-repo's copy into each project's `.git/hooks/`, so editing t
 tests/prepare-commit-msg.test.sh
 ```
 
-## Reading the trailer
+**What the suite cannot see, by construction.** It commits into a throwaway repo and reads back what git stored, and the squash demotion happens server-side at merge. The hook's output is correct in every case covered here — trailer in the final paragraph, resolving — and stays correct right up until GitHub rewrites it. The suite's own assertions read `%(trailers:key=Refs,valueonly)` — right pre-merge, and exactly the call that fails on `main`.
 
-Keeping the reference out of the subject costs nothing but its visibility in a default `git log --oneline`. This format puts it back:
+**Decided: the demotion itself stays unasserted.** Reproducing it needs a live merge, and a fixture of a post-squash message would only assert GitHub's behaviour back at itself — it would keep passing if GitHub changed. The testable half is the remedy: the recipes under [Reading the reference](#reading-the-reference) are ordinary local commands, and a fixture commit shaped like a squashed one would catch an edit that quietly breaks them. That test is the open half of this decision, not an oversight.
+
+## Reading the reference
+
+Keeping the reference out of the subject costs nothing but its visibility in a default `git log --oneline`. **Put it back by reading the body as text, not by asking git for a trailer** — `%(trailers:key=Refs)` and `git interpret-trailers --parse` both come back empty on `main`, for the reason the squash trap above gives. Both still work against a commit that has not been merged yet, which is how the gap went unnoticed: every recipe is correct on the branch and wrong on the trunk.
+
+One commit:
 
 ```bash
-git log --format='%h %s  %(trailers:key=Refs,valueonly,separator=%x2C )'
+git log -1 --format=%B <sha> | sed -n 's/^Refs: //p'
 ```
+
+A log listing, restoring the reference to the one-line format:
+
+```bash
+git log --format='@@%h %s%n%b' |
+  awk '/^@@/  { if (h != "") { if (r != "") h = h "  " r; print h }
+                h = substr($0, 3); r = ""; next }
+       /^Refs: / { if (r != "") r = r ", "
+                   r = r substr($0, 7) }
+       END     { if (h != "") { if (r != "") h = h "  " r; print h } }'
+```
+
+Three rows of its output on `main` — one reference, two, and none:
 
 ```text
-<sha> chore: generate the meta-issue trailer from the branch name  #52
-<sha> docs: reference issues across repos as owner/repo#N
+0b59328 docs: decide the Node persistence seam and the v1 write path (#71)  #64
+9afa14d docs(context): make the status matrix total and name completion time (#66)  #22, #17
+44f5f62 docs: reference issues across repos as owner/repo#N (#55)
 ```
 
-The separator is load-bearing: left out, it defaults to a newline, so a commit carrying two references breaks the one-line format. A commit with no trailer prints a bare subject.
+`%b` is the body alone, so the `@@` marker is what separates one commit's header from the body lines beneath it: awk holds the header until it has seen every `Refs:` line under it, then prints them joined. A commit with no reference prints a bare subject, and two join with a comma and a space, as the old `separator` argument arranged. Both reference forms match the same pattern, so a sub-repo's `decasamerlo/nesto#N` is picked up unchanged.
+
+**Nothing here sets `RS` or leans on a GNU extension**, so mawk, one-true-awk and busybox awk all print byte-identical output. That is worth two extra lines, because the failure it avoids is silent. The obvious `RS = "\0"` version reads that as the empty string under one-true-awk, switches to paragraph mode, and prints body prose where commit rows should be; under busybox awk it prints nothing at all. Both exit 0 and write no stderr, so neither looks like a failure.
+
+**The cost of reading text is that nothing distinguishes a real trailer from a body line that merely begins `Refs:`.** Git's own parser drew that distinction; squash is what took it away. No commit in these repos writes such a line, and a body that needs to quote the trailer should indent it — which keeps git's parser off it too, for as long as git is still doing the parsing. The listing's `@@` marker is exposed the same way by a body line starting `@@`, a quoted diff hunk header being the realistic case; indenting settles both.
