@@ -51,3 +51,15 @@ _Avoid_: Roll-up, aggregate status
 **Child** / **Parent**:
 Relationship terms. A node's children are those nodes whose `parentId` points to it. A node's parent is the node referenced by its `parentId` (always null for roots). "Has children" is a query-backed derived check, not a stored flag.
 _Avoid_: Sub-node, descendant
+
+**Ancestor** / **Subtree**:
+Transitive relationship terms layered on Child/Parent. A node's ancestors are its parent, that parent's parent, and so on up to the root. A node's subtree is the node itself plus everything below it. Rules are written against the subtree — the collective noun — rather than against a plural relation.
+_Avoid_: Descendants, offspring, branch, lineage
+
+**Deleted**:
+A node is deleted when it carries a `deletedAt` instant. Deletion is soft — nothing is destroyed and there is no purge. Deleting a node stamps its whole subtree with the same instant, skipping any node that already carries one, so a node deleted on its own keeps its original stamp. Every read path excludes deleted nodes; only restore reaches them, through `findDeletedById`. A node may not be created under a deleted parent, and a node whose ancestor is deleted is not restored on its own.
+_Avoid_: Removed, archived, inactive, trashed
+
+**Trash**:
+The deleted nodes that have no deleted ancestor — each one the restorable unit for its whole subtree. Restoring a node clears its `deletedAt` and that of every node in its subtree carrying the same instant, which returns the subtree to exactly the state it was deleted in while leaving independently deleted nodes deleted. Membership is a derived check, not a stored flag: a node hidden behind a deleted ancestor joins the trash when that ancestor is restored.
+_Avoid_: Bin, recycle bin, archive, graveyard

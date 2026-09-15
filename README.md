@@ -55,5 +55,7 @@ Key decisions are recorded as ADRs in [docs/adr/](docs/adr/):
 - [ADR 004 — React for Frontend](docs/adr/004-react-for-frontend.md)
 - [ADR 005 — Native Stacked PRs](docs/adr/005-native-stacked-prs.md)
 - [ADR 006 — Contribution and Review Model](docs/adr/006-contribution-and-review-model.md)
+- [ADR 007 — Immutable Node Entity](docs/adr/007-immutable-node-entity.md)
+- [ADR 009 — Soft Delete with Subtree Restore](docs/adr/009-soft-delete-with-subtree-restore.md)
 
 The domain model is documented in [CONTEXT.md](CONTEXT.md).
