@@ -29,7 +29,13 @@ This meta-repo is cloned/updated with [`mani`](https://github.com/mani-learn/man
 ```bash
 # Clone all repos and set up this workspace
 mani sync
+
+# Install the commit-message hook in every repo, then check the workspace
+mani run install-hooks --all --ignore-non-existing
+scripts/verify-layout.sh
 ```
+
+`verify-layout.sh` reports a row per repo per state and exits nonzero if any of them is wrong — see [Verifying the layout](docs/conventions/stacked-prs.md#verifying-the-layout).
 
 ## Development
 
