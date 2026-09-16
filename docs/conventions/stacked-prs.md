@@ -113,7 +113,7 @@ Push only your own layers; never force-push someone else's branch.
 ## Configuration summary (applied to all four repos)
 
 | Setting | Value |
-|---|---|
+| --- | --- |
 | Visibility | public |
 | Merge method | squash only, auto-delete head branches |
 | Ruleset (branch `main`) | require pull request; 1 approval; require code-owner review; non-fast-forward |
