@@ -51,6 +51,10 @@ Two category roles and seven state roles, two of them (`deferred` and `pending-m
 
 Single-context layout: `CONTEXT.md` at the root, ADRs in `docs/adr/`. See `docs/agents/domain.md`.
 
+### ADR conventions
+
+ADRs are born `accepted` and number monotonically. Editing an accepted one — or narrowing it from a new ADR — marks the change. See `docs/conventions/adr.md`.
+
 ### Commit conventions
 
 Conventional Commits, plus a `Refs:` trailer naming the meta-repo issue on any issue-numbered branch. See `docs/conventions/commits.md`.
