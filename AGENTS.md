@@ -50,3 +50,15 @@ Single-context layout: `CONTEXT.md` at the root, ADRs in `docs/adr/`. See `docs/
 ### Commit conventions
 
 Conventional Commits, plus a `Refs:` trailer naming the meta-repo issue on any issue-numbered branch. See `docs/conventions/commits.md`.
+
+### Non-public sources
+
+Nesto is public; the codebases its docs draw precedent from are not.
+
+- **Verify before naming.** Any repository named in published text must be public: `gh repo view <owner>/<repo> --json isPrivate`, reject on `true`. Read the field — a lookup that merely succeeds proves nothing, because an agent runs authenticated as the author and sees a private repository as an entirely ordinary one.
+- **Cite by shape, never by measurement.** Never publish identifiers, verbatim quotation, or counts of implementations, services, or references taken from a non-public codebase. State precedent as direction only — "the dominant approach", "a minority pattern".
+- **Surfaces:** commit messages, files, issue bodies, issue comments, PR bodies, PR reviews.
+- **Fires twice:** when drafting any of the above, and as a checklist item in every review pass — including over text a human wrote.
+- **On a trip:** write the generic form and say that you did. Don't stall for a decision, and don't substitute silently.
+
+Full rule, with the reasoning: `docs/conventions/non-public-sources.md` ([ADR 012](docs/adr/012-precedent-without-evidence.md)).
