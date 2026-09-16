@@ -18,3 +18,7 @@ Merge method is **squash only**: every merged PR lands as one commit. Head branc
 - Native stacks are same-repo only — fork PRs cannot be stacked. Outside contributions are always single PRs to `main`.
 - One merged commit per PR keeps `main` history readable and makes `git rebase --onto` trivial when layers are touched manually.
 - Layers merge bottom-up, one at a time; `gh stack merge` merges a whole stack as a shortcut where the gate can be satisfied (see the owner-only flow in [docs/conventions/stacked-prs.md](../conventions/stacked-prs.md)).
+
+## Amendments
+
+- **2026-09-01** — narrowed the `gh stack merge` shortcut to the cases where the code-owner gate can be satisfied ([#9](https://github.com/decasamerlo/nesto/pull/9)).

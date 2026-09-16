@@ -18,3 +18,7 @@ Use three separate repositories, not a monorepo. Each repo is an independent git
 - Issue-to-commit traceability has to be built deliberately — GitHub's `#N` is repo-local, so a reference crossing a repo boundary resolves only in the qualified `owner/repo#N` form ([docs/conventions/stacked-prs.md](../conventions/stacked-prs.md#referencing-issues)).
 - Getting that reference into permanent history takes a `Refs:` commit trailer and a hook to generate it ([docs/conventions/commits.md](../conventions/commits.md#the-refs-trailer)), and both conventions are out of reach of a contributor who clones a sub-repo on its own ([docs/conventions/stacked-prs.md](../conventions/stacked-prs.md#fork-contribution--outside-contributors)).
 - Web + mobile could merge into one repo later if shared-code pain justifies it.
+
+## Amendments
+
+- **2026-09-15** — recorded the cross-repo traceability cost in Consequences ([#61](https://github.com/decasamerlo/nesto/pull/61)).
