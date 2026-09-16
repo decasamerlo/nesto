@@ -23,3 +23,8 @@ All four repos are public. Contributors open PRs; nobody commits to `main` direc
 - The co-developer's PRs to `main` still need the owner's approval (or bypass). Co-developer stacked PRs are subject to the cascade rebase like anyone else's.
 - The owner's own stacked layers land via the unstack → submit → bypass-merge → rebase flow; the merged layer becomes a normal squash commit and the stack above it is re-based onto `main`. Non-stacked merges need no unstacking.
 - The owner's own work never blocks on approval; if they want a second pair of eyes, they request a reviewer's review manually.
+
+## Amendments
+
+- **2026-09-01** — reversed the Decision: the co-developer's role moved from Triage to Write ([#2](https://github.com/decasamerlo/nesto/pull/2)).
+- **2026-09-01** — corrected the claim that the owner's stacked PRs merge via the bypass list ([#9](https://github.com/decasamerlo/nesto/pull/9)).

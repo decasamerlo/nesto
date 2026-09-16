@@ -18,7 +18,13 @@ The domain `Node` holds only a `NodeId parentId` value, not object references. "
 - The domain never solves a graph-loading problem — hierarchy queries stay in the repository.
 - All fields persist regardless of list/item state; the UI hides or shows fields based on derived state.
 - Hierarchy is stored as an adjacency list (`parent_id`) — lowest complexity at solo/small-friends scale. A closure table and recursive CTEs (`WITH RECURSIVE`) were rejected: the former adds complexity without need, the latter has no Spring Data JPA support.
+  — *Narrowed by [ADR 010](010-node-persistence-seam.md): true of Spring Data derived queries, not of `@Query(nativeQuery = true)`.*
 - "Has children" is a derived, query-backed check via a repository method, not a stored counter — more correct-by-construction than a manually maintained cache.
 - Cycle prevention lives in a domain service, not on `Node` itself — the service receives the ancestor/descendant chain to check.
 - Ordering is a domain concern: `Node` carries its own `position` field, domain rules enforce no duplicate positions among siblings. Reindexing (shifting siblings on insert/delete/reorder) is hand-rolled — no `acts_as_list` equivalent in Java.
 - Move is a single use case, not two: `MoveNodeUseCase(nodeId, newParentId, newPosition)`. "Reorder" is the special case where `newParentId == currentParentId`.
+
+## Amendments
+
+- **2026-08-11** — folded the Node domain-model details into Consequences ([090b5eb](https://github.com/decasamerlo/nesto/commit/090b5eb)).
+- **2026-09-15** — narrowed by ADR 010: the recursive-CTE claim holds for Spring Data derived queries only ([#71](https://github.com/decasamerlo/nesto/pull/71)).
