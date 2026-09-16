@@ -43,7 +43,7 @@ Issues live as GitHub issues in this meta-repo (`decasamerlo/nesto`). See `docs/
 
 ### Triage labels
 
-Two category roles and six state roles, one of them (`pending-merge`) local to this repo. See `docs/agents/triage-labels.md`.
+Two category roles and seven state roles, two of them (`deferred` and `pending-merge`) local to this repo. See `docs/agents/triage-labels.md`.
 
 ### Domain docs
 
