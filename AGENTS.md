@@ -17,6 +17,8 @@ Working inside a sub-repo, deciding which repo owns a change, or opening/merging
 
 `mani sync` clones/updates the three repos. `mani run` executes tasks across them. Manifest: [`mani.yaml`](mani.yaml).
 
+`scripts/verify-layout.sh` checks the workspace is wired the way the conventions assume — `mani.yaml` above, canonical `origin`, commit-message hook live — and names which one is wrong. See [Verifying the layout](docs/conventions/stacked-prs.md#verifying-the-layout).
+
 `scripts/lint-docs.sh` lints this repo's markdown at a pinned tool version — run it before committing docs. See [Markdown](docs/conventions/markdown.md).
 
 ## Coach mode
