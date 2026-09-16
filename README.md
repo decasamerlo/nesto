@@ -45,6 +45,14 @@ Run commands across all repos:
 mani run <task-name>
 ```
 
+Lint this repo's docs before committing them:
+
+```bash
+scripts/lint-docs.sh
+```
+
+The tool version is pinned inside that script — see [Markdown](docs/conventions/markdown.md).
+
 ## Architecture & Design
 
 Key decisions are recorded as ADRs in [docs/adr/](docs/adr/):
