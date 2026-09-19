@@ -55,6 +55,10 @@ Single-context layout: `CONTEXT.md` at the root, ADRs in `docs/adr/`. See `docs/
 
 ADRs are born `accepted` and number monotonically. Editing an accepted one — or narrowing it from a new ADR — marks the change. See `docs/conventions/adr.md`.
 
+### Test fixtures
+
+Writing a fixture, adding a nullable field, or naming a test constant? A fixture decides what an assertion can prove. See `docs/conventions/test-fixtures.md`.
+
 ### Commit conventions
 
 Conventional Commits, plus a `Refs:` trailer naming the meta-repo issue on any issue-numbered branch. See `docs/conventions/commits.md`.
