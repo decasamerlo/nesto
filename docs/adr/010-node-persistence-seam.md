@@ -36,7 +36,7 @@ This resolves the ADR 001 / ADR 009 contradiction in ADR 009's favour. ADR 001's
 
 **No `@SQLDelete`.** It fires on `deleteById()` with no way to pass an `Instant`, so it would have to use the database clock — and ADR 009 makes the caller-supplied shared instant the restore selector. Precedent elsewhere additionally records that `@SQLDelete` collides with an optimistic-lock check. Deletion is a named port operation, not an override.
 
-**Migrations are Liquibase YAML** at `persistence/src/main/resources/db/postgresql/changelog/`, a master plus `001-create-nodes.yaml`. Liquibase is the dominant choice in other repos. The technology segment is in the path because the changelog stops being portable the moment it reaches for a `jsonb` column or a GIN index; labelling it truthfully costs nothing. **No per-module Postgres schema** — that convention keeps bounded contexts from colliding, and Nesto has one.
+**Migrations are Liquibase YAML** at `persistence/src/main/resources/db/postgresql/changelog/`, a master plus `001-create-node.yaml`. Liquibase is the dominant choice in other repos. The technology segment is in the path because the changelog stops being portable the moment it reaches for a `jsonb` column or a GIN index; labelling it truthfully costs nothing. **No per-module Postgres schema** — that convention keeps bounded contexts from colliding, and Nesto has one.
 
 **Adapter tests run against Testcontainers Postgres**, with Liquibase applying the real changelog and `ddl-auto=validate`, so the test asserts that the entity and the migration agree. H2 cannot make that assertion honestly: it would validate against a schema H2 accepted rather than the one Postgres will. Container reuse is not used; a JVM-wide singleton container with `TRUNCATE` between tests does the same job.
 
@@ -55,3 +55,4 @@ This resolves the ADR 001 / ADR 009 contradiction in ADR 009's favour. ADR 001's
 ## Amendments
 
 - **2026-09-20** — corrected: the surveyed precedent does not reserve a snapshot record for the longest argument lists, and its threshold is not argument count; the typed-parameter option that answers the same hazard is now recorded as considered ([#96](https://github.com/decasamerlo/nesto/pull/96)).
+- **2026-10-06** — corrected: the table is `node`, per [database-naming.md](../conventions/database-naming.md), so the changelog is `001-create-node.yaml` ([#98](https://github.com/decasamerlo/nesto/pull/98)).

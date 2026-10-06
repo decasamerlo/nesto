@@ -59,6 +59,10 @@ ADRs are born `accepted` and number monotonically. Editing an accepted one — o
 
 Writing a fixture, adding a nullable field, or naming a test constant? A fixture decides what an assertion can prove. See `docs/conventions/test-fixtures.md`.
 
+### Database naming
+
+Naming a table, or writing a `createTable` or an `@Table`? Tables are singular, snake_case, and always named explicitly. See `docs/conventions/database-naming.md`.
+
 ### Commit conventions
 
 Conventional Commits, plus a `Refs:` trailer naming the meta-repo issue on any issue-numbered branch. See `docs/conventions/commits.md`.

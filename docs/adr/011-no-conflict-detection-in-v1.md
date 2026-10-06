@@ -30,7 +30,7 @@ It then emerged that the exposure is far smaller than it first appeared. ADR 001
 
 ## Decision
 
-**Option A.** The write path is a single native upsert — `INSERT … ON CONFLICT (id) DO UPDATE` — with no version column anywhere and no conflict reported. `created_at` is excluded from the `DO UPDATE` set, and the statement carries `WHERE nodes.deleted_at IS NULL` so a save can never mutate a soft-deleted row. Both guards live in the one write path; there is no second write path that could forget them. A zero row count can only mean the row exists and is deleted, so it is thrown on rather than discarded.
+**Option A.** The write path is a single native upsert — `INSERT … ON CONFLICT (id) DO UPDATE` — with no version column anywhere and no conflict reported. `created_at` is excluded from the `DO UPDATE` set, and the statement carries `WHERE node.deleted_at IS NULL` so a save can never mutate a soft-deleted row. Both guards live in the one write path; there is no second write path that could forget them. A zero row count can only mean the row exists and is deleted, so it is thrown on rather than discarded.
 
 **ADR 009's other write-side rule — no node under a deleted parent — is deliberately not in this statement.** It spans two rows, so guards that protect the row being written cannot express it, and folding a parent check into the upsert would cost the zero row count its only meaning. It lives in the application service, which needs no new port to ask it: `findById` returns active nodes only (ADR 009), so a parent that does not resolve is absent or deleted, and either answer rejects the write. The same check covers move, which reaches the identical state by a different path. The newest equivalent across other repos places its guard the same way — the parent's state modelled in the child's own vocabulary, the check in the application service rather than in the repository or the SQL. This is policy at one choke point, not an invariant the database enforces; the concurrent case stays open as [#70](https://github.com/decasamerlo/nesto/issues/70).
 
@@ -57,3 +57,7 @@ Its cost is the port splitting `save` into `create` + `update`, a zero row count
 - **Moving to D later needs no data migration.** `updated_at` is written from day one either way; A simply does not read it. The change is splitting a port method, adding a parameter, and checking a row count.
 - One invariant keeps that door open: `updated_at` must always reflect the last effective change to a node's content, stamped by the domain. ADR 007 guarantees it and nothing here threatens it. Note `softDeleteSubtree` does not touch `updatedAt` — deletion is guarded by `deleted_at` instead — so `updatedAt` is a domain timestamp, not a row-audit timestamp. That is what makes it usable as a domain-level token.
 - The change is cheapest now and never cheaper again: adding D later means touching every use case that writes, and today there are almost none. By the time it is wanted, the move, status, date and restore use cases all exist.
+
+## Amendments
+
+- **2026-10-06** — corrected: the table is `node`, per [database-naming.md](../conventions/database-naming.md), so the upsert guard reads `WHERE node.deleted_at IS NULL` ([#98](https://github.com/decasamerlo/nesto/pull/98)).
