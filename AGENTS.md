@@ -21,6 +21,8 @@ Working inside a sub-repo, deciding which repo owns a change, or opening/merging
 
 `scripts/lint-docs.sh` lints this repo's markdown at a pinned tool version — run it before committing docs. See [Markdown](docs/conventions/markdown.md).
 
+`scripts/merge-layer.sh <pr>` merges one layer of the owner's stack, or a lone PR, end to end — run it for every merge, `--dry-run` first. See [Merging a stack](docs/conventions/stacked-prs.md#merging-a-stack--owner-only-scriptsmerge-layersh).
+
 ## Coach mode
 
 Default is coach-not-typer on product work: guide me, don't implement for me. The line follows what I'm trying to learn — I'm learning to build this app, not learning to write ADRs — and the branch's Conventional Commit type ([commits.md](docs/conventions/commits.md)) is how you tell which side you're on.

@@ -14,7 +14,7 @@ How the four repos use GitHub native stacked PRs (`gh stack`), reference issues 
 
 **Code-owner gate**: Only `decasamerlo` — the owner — can approve a PR into `main`, because only that account is a code owner. The owner cannot self-approve (GitHub forbids it), and stacked merges never honor the bypass list — so an own stacked layer can only land by leaving the stack first.
 
-**Unstacking**: Removing a branch from the stack with `gh stack modify` (Drop). The local branch and PR are preserved — only the stack membership is severed, which makes the PR a normal PR that the bypass can merge.
+**Unstacking**: Removing a branch from the stack with `gh stack modify` (Drop), or the whole stack with `gh stack unstack <stack>`. The local branch and PR are preserved — only the stack membership is severed, which makes the PR a normal PR that the bypass can merge.
 
 **Bypass**: The owner's ruleset bypass ("for pull requests only") merges *non-stacked* PRs. Stacked PRs cannot use it at all: GitHub's async stack merge evaluates every rule for every layer and honors no bypass, admin or otherwise. On non-stacked PRs the CLI only applies it with `gh pr merge --admin` — plain merges still fail the 1-approval and code-owner rules.
 
@@ -41,7 +41,8 @@ GitHub's `#N` shorthand is repo-local — it resolves against the repo the text 
 - **`Closes` is the only closing verb this project uses.** `Implements` is retired: GitHub does not treat it as a closing keyword, so the verb itself never closed anything — those issues closed through hand-made Development-panel links, which this rule replaces.
 - **`Refs` is the inert form** — for a layer that contributes to an issue without finishing it: `Refs decasamerlo/nesto#N.`
 - **One issue, one `Closes`, on the layer that completes it.** Lower layers carrying part of it use `Refs`.
-- **The keyword only fires from a PR based on `main`.** GitHub ignores closing keywords on a PR targeting any other branch — no link is created, and merging has no effect on the issue. A layer still based on the layer below is therefore inert; the merge procedure below retargets each layer to `main` before it merges — step 5 is where you confirm it — which is what makes the issue close exactly when the work lands.
+- **The keyword only fires from a PR based on `main`.** GitHub ignores closing keywords on a PR targeting any other branch — no link is created, and merging has no effect on the issue. A layer still based on the layer below is therefore inert; the merge procedure below retargets each layer to `main` before it merges, which is what makes the issue close exactly when the work lands.
+- **Trap — the link GitHub shows can disagree with the base.** Read it from the PR's `closingIssuesReferences`, right before the merge. On 2026-10-27, `decasamerlo/nesto-backend#18` kept no link to its `Closes` issue after GitHub retargeted it onto `main` by itself, until its body was saved again unchanged or some time passed. The same day, `decasamerlo/nesto-backend#24` showed its link while still based on the layer below, inside a stack. [`scripts/merge-layer.sh`](#merging-a-stack--owner-only-scriptsmerge-layersh) checks the link before every merge, and saves the body again when the link is missing.
 - **An outside contributor's closing line is intent, not automation.** Closing an issue across a repo boundary needs write access to the repo holding it, which a fork contributor does not have. They still open with `Closes decasamerlo/nesto#N.`; the owner closes the issue when the PR merges.
 - **The PR body is the single source of truth for the issue → PR link.** GitHub derives the Development-panel entry from it — never create that entry by hand.
 - **A pasted full issue URL is equivalent, not preferred.** GitHub renders it as the same `owner/repo#N` anchor, and both forms follow repo renames — the short form is the convention.
@@ -81,17 +82,28 @@ gh stack submit                  # creates the PR — verify its base is the lay
 
 **Recovery.** If it happens anyway, the old heads usually still exist in the object store: restore each branch with `git branch -f <branch> <old-head>`, push with `git push --force origin <branch>`, and reopen with `gh pr reopen <n>`. Then `gh stack sync`; verify every PR open and every diff non-empty.
 
-## Merging a stack — owner only, unstack → submit → bypass-merge → rebase
+## Merging a stack — owner only, `scripts/merge-layer.sh`
 
-Stacked PRs never honor the bypass list, and the owner cannot self-approve — so an own stacked layer cannot merge while it is in the stack. The owner merges bottom-up, one layer at a time:
+Stacked PRs never honor the bypass list, and the owner cannot self-approve — so an own stacked layer cannot merge while it is in the stack. The owner merges bottom-up, one layer at a time, one run per layer, from the sub-repo holding the stack:
 
-1. **Unstack the layer**: `gh stack modify` → select the layer → `x` (Drop) → `Ctrl+S`. The branch and PR are preserved; the remaining branches are rebased locally onto their new parents (the layer above ends up based on `main`).
-2. **Submit first, then merge**: `gh stack submit` pushes the rebased branches and recreates the stack on GitHub without the layer — answer **Yes** to "Overwrite the existing stack on GitHub?" This must happen *before* the merge: while the PR is still linked in a GitHub stack, even `--admin` merges are refused (async stack merge API only).
-3. **Merge via bypass, with `--admin`**: `gh pr merge <n> --squash --admin`. The plain `--squash` form fails against the 1-approval and code-owner rules — the CLI does not apply the bypass list automatically; `--admin` is required even on non-stacked PRs.
-4. **Rebase the rest**: `gh stack rebase` fetches the new `main` and re-plays the layers above onto it — each retains its original commits; the squash-merge already put that content on `main`, so the rebase drops the now-empty duplicates. `gh stack sync` works here too.
-5. **Push**: `gh stack push` publishes the rebased branches. Confirm the upper layers now target `main` before merging the next.
+```bash
+../scripts/merge-layer.sh --dry-run <n>   # every check, nothing changed
+../scripts/merge-layer.sh <n>
+```
 
-Repeat bottom-up until no layers remain above `main`.
+Before it changes anything, it stops, naming what failed, unless the layer is open, based on `main` and not behind it, green on every check of its head (it waits while one runs), and free of review threads still waiting for a reply. A thread counts as answered when your comment is its last, or you gave the last comment a 👍. Then:
+
+1. **Unstack**, if the layer is still in a GitHub stack: `gh stack unstack <stack>` takes the whole stack off GitHub, since even `--admin` merges are refused while the PR is linked in a stack. Unstacking drops the local tracking too, so `gh stack init` adopts the open layers' branches again, after the script checks that each one equals its PR's head: init adopts whatever commit a branch holds.
+2. **Confirm the closing link**: each issue the body names on a `Closes` line has to be in the PR's `closingIssuesReferences`. A missing one gets the body saved again, unchanged, and up to a minute's wait before the script stops. See the trap under [Referencing issues](#referencing-issues).
+3. **Resolve the answered threads.** A thread stays open while the reviewer may still answer it, and closes at merge.
+4. **Merge via bypass, with `--admin`**: `gh pr merge <n> --squash --admin`. The plain `--squash` form fails against the 1-approval and code-owner rules — the CLI does not apply the bypass list automatically; `--admin` is required even on non-stacked PRs.
+5. **Rebase and push the rest**, once each issue has closed: `gh stack rebase` re-plays the layers above onto the new `main`, dropping the commits the squash already landed, and `gh stack push` publishes them. The layer above now targets `main`; the script retargets it if GitHub has not.
+
+Repeat bottom-up until no layers remain above `main`. The next run waits for the CI the previous run's push started.
+
+**When `main` has moved** since the stack was last rebased, the first run stops on "behind": `gh stack rebase && gh stack push` first, so CI runs every layer against the current `main` before anything lands.
+
+**By hand**, the TUI replaces step 1: `gh stack modify` → select the layer → `x` (Drop) → `Ctrl+S`, then `gh stack submit`, answering **Yes** to "Overwrite the existing stack on GitHub?", before the merge.
 
 Push only your own layers; never force-push someone else's branch.
 
