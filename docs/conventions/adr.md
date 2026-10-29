@@ -79,7 +79,9 @@ An ADR can be narrowed without being edited. [ADR 010](../adr/010-node-persisten
 
 ## Numbering
 
-`NNN-kebab-title.md`, three digits, taken by scanning `docs/adr/` for the highest number and adding one.
+`NNN-kebab-title.md`, three digits, taken by scanning `docs/adr/` and the reservations below for the highest number and adding one.
+
+**Reserving a number.** A ticket that has to cite its ADR before writing it reserves the number with a line at the end of this section, `- **NNN** — reserved by [#N](…)`, and the PR that writes the ADR deletes the line. `scripts/lint-docs.sh` fails on any `ADR NNN` in the docs that names neither a file in `docs/adr/` nor a reserved number, so a reservation can no longer go unrecorded.
 
 **Numbers are monotonic and gaps are never backfilled.** A number, once skipped or retired, stays spent — an ADR number appears in commit messages, issues and other ADRs, and reusing one silently re-points every reference that was written before.
 
