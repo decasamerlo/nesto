@@ -83,6 +83,6 @@ An ADR can be narrowed without being edited. [ADR 010](../adr/010-node-persisten
 
 **Numbers are monotonic and gaps are never backfilled.** A number, once skipped or retired, stays spent — an ADR number appears in commit messages, issues and other ADRs, and reusing one silently re-points every reference that was written before.
 
-**008 is a known gap.** It has never existed; `git log --all --diff-filter=A` finds no file at that number. It is not missing and must not be filled.
+**008 was reserved, not skipped.** [#19](https://github.com/decasamerlo/nesto/issues/19) held the number for the application layer when ADR 009 was numbered ([#69](https://github.com/decasamerlo/nesto/pull/69)), and ADR 010 and ADR 011 cited it before it was written. [ADR 008](../adr/008-application-layer.md) landed after 013 without breaking the rule above: every reference written before it already meant that record, so filling the number re-pointed nothing.
 
 The numbering rule also lives in the vendored `.agents/skills/domain-modeling/ADR-FORMAT.md`, which is overwritten whenever skills update. This file is the canonical one.

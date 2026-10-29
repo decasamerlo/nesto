@@ -40,7 +40,7 @@ This resolves the ADR 001 / ADR 009 contradiction in ADR 009's favour. ADR 001's
 
 **Adapter tests run against Testcontainers Postgres**, with Liquibase applying the real changelog and `ddl-auto=validate`, so the test asserts that the entity and the migration agree. H2 cannot make that assertion honestly: it would validate against a schema H2 accepted rather than the one Postgres will. Container reuse is not used; a JVM-wide singleton container with `TRUNCATE` between tests does the same job.
 
-**`@Transactional` sits on the Spring Data repository interface** for the `@Modifying` writes, which are not auto-wrapped the way `save()` is, and on the inbound adapter for reads. The application service stays framework-free — a constraint on ADR 008, which [#19](https://github.com/decasamerlo/nesto/issues/19) reserves for the application layer and has not yet written. Bulk updates carry `clearAutomatically = true`; `flushAutomatically` is not used.
+**`@Transactional` sits on the Spring Data repository interface** for the `@Modifying` writes, which are not auto-wrapped the way `save()` is, and on the inbound adapter for reads. The application service stays framework-free — a constraint on [ADR 008](008-application-layer.md), the application layer. Bulk updates carry `clearAutomatically = true`; `flushAutomatically` is not used.
 
 ## Consequences
 

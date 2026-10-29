@@ -52,7 +52,7 @@ Its cost is the port splitting `save` into `create` + `update`, a zero row count
 
 ## Consequences
 
-- The port keeps `void save(Node)`. No `NodeChangedUnderYou`, no 409, and commands in the application layer — ADR 008, reserved by [#19](https://github.com/decasamerlo/nesto/issues/19) and not yet written — carry no expected-token parameter.
+- The port keeps `void save(Node)`. No `NodeChangedUnderYou`, no 409, and commands in the application layer ([ADR 008](008-application-layer.md)) carry no expected-token parameter.
 - The parent guard is not in `NodeRepositoryContractTest`. It is an application-layer rule, exercised against the in-memory fake port with no Spring context, which keeps the repository a dumb store and the contract suite about storage.
 - **Moving to D later needs no data migration.** `updated_at` is written from day one either way; A simply does not read it. The change is splitting a port method, adding a parameter, and checking a row count.
 - One invariant keeps that door open: `updated_at` must always reflect the last effective change to a node's content, stamped by the domain. ADR 007 guarantees it and nothing here threatens it. Note `softDeleteSubtree` does not touch `updatedAt` — deletion is guarded by `deleted_at` instead — so `updatedAt` is a domain timestamp, not a row-audit timestamp. That is what makes it usable as a domain-level token.
