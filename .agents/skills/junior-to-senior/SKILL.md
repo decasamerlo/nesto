@@ -16,7 +16,7 @@ Both are altitude failures. The senior's job is to drag the plan to the right al
 
 ## The cardinal rule
 
-**Every senior finding needs evidence.** A claim about the codebase cites a file and line. A claim about best practice cites a fetched source — official docs, release notes, an RFC, a postmortem — with a date. If web research is unavailable, the finding is labeled `[training-data, unverified]` so stale knowledge is never laundered as current truth. A senior who argues from vibes is just a louder junior.
+**Every senior finding needs evidence.** A claim about the codebase cites a file and line. A claim about best practice cites a fetched source — official docs, release notes, an RFC, a postmortem — with a date. A claim about runtime behaviour — what a query, a driver, a clock or a test actually does — cites a probe you ran: the command and its output. If web research is unavailable, the finding is labeled `[training-data, unverified]`; a runtime claim the environment cannot probe is labeled `[reasoned, unverified]`. Neither stale knowledge nor a plausible deduction gets laundered as current truth. A senior who argues from vibes is just a louder junior.
 
 ## Phase 0: Capture the junior artifact
 
