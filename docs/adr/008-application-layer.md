@@ -38,7 +38,7 @@ ADR 001's `MoveNodeUseCase(nodeId, newParentId, newPosition)` reads, under this,
 
 **A `Command` carries intent, never node state, and no expected-token parameter.** ADR 011's first condition is that writes stay intent-shaped; a command carrying a node's fields would break it and reopen ADR 011.
 
-**The application service carries no annotation.** It is a plain class, built by a `@Bean` method in the composition root; `:application` has no Spring to annotate it with. Adapters stay annotated and component-scanned. That answers the wiring question [decasamerlo/nesto-backend#24](https://github.com/decasamerlo/nesto-backend/pull/24) left for this layer.
+**The application service carries no Spring annotation.** It is a plain class, built by a `@Bean` method in the composition root; `:application` has no Spring to annotate it with. Lombok's annotations are allowed: Lombok sits on the compile classpath only and none of its annotations is visible at runtime, so `@RequiredArgsConstructor` writes the constructor the `@Bean` method calls and leaves a container nothing to find. Where other repos allow Lombok in this layer, the dominant shape draws the same line. Adapters stay annotated and component-scanned. That answers the wiring question [decasamerlo/nesto-backend#24](https://github.com/decasamerlo/nesto-backend/pull/24) left for this layer.
 
 **No transaction is opened here, for now.** Each port call is its own transaction, as ADR 010 has it, so `setNodeStatus` runs as two: the load and the save. That widens nothing ADR 011 has not already accepted. The window between them is the overlap of two in-flight requests, and the command carries intent rather than a client's copy of the node. #76's move, the first operation that saves several rows, revisits where the boundary lives.
 
@@ -68,3 +68,7 @@ ADR 001's `MoveNodeUseCase(nodeId, newParentId, newPosition)` reads, under this,
 - `setNodeStatus` runs as two transactions until #76 moves the boundary.
 - `NodeRepositoryPort` breaks the prefix rule in two methods until #105 lands.
 - The precedent above is cited as direction only, so a reader cannot audit it. [ADR 012](012-precedent-without-evidence.md) records why.
+
+## Amendments
+
+- **2026-10-30** — narrowed the application service's no-annotation rule to Spring annotations: Lombok's, such as `@RequiredArgsConstructor`, are allowed ([#113](https://github.com/decasamerlo/nesto/pull/113)).
