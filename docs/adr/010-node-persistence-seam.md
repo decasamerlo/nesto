@@ -13,10 +13,13 @@ A survey of sibling implementations in other repos informed every choice below; 
 ## Decision
 
 **Two models.** A separate `NodeEntity` — a mutable JPA bean — in package `dev.nesto.adapter.out.postgresql`, mapped to and from the immutable `Node`. Annotating `Node` directly would mean dropping `final` from every field and pulling `jakarta.persistence` into `core`, trading ADR 007's central guarantee for one saved class. A separate entity class is likewise the norm in other repos.
+— *Reversed by [ADR 014](014-backend-module-layout.md), the package only: it is `dev.nesto.adapter.out.persistence.postgresql`.*
 
 **Modules are named by hexagonal direction, not by technology.** A new `:persistence` module now; `:api` later, depending only on `:core` and never on `:persistence`. The technology lives in the package name, where hexagonal wants it; a second database would be `adapter/out/mongodb` inside `:persistence`.
+— *Reversed by [ADR 014](014-backend-module-layout.md): the backend has two modules, `:core` and `:app`, and every production adapter sits in `:app`. A package names the adapter's category and its implementation, so a second database would be `adapter.out.persistence.mongodb`.*
 
 The alternative — a Gradle module per adapter technology — is a minority pattern in other repos and was not repeated; the newest code there went the package route. More to the point, a technology-named module cannot express the in/out boundary, which is the boundary that matters here: it is what stops the REST layer importing `NodeEntity`. Splitting by direction makes that a compile error. The alternative way to buy that guarantee is an ArchUnit rule — a string pattern over package names, asserted in CI — and precedent elsewhere shows such patterns drifting out of step with the classes they describe. Compile errors do not drift.
+— *Reversed by [ADR 014](014-backend-module-layout.md), the case for the compiler: an ArchUnit rule in `:app` stops the REST layer importing `NodeEntity`, and ADR 014 says how its rules are kept from drifting in either direction.*
 
 **A snapshot record, and a hand-rolled mapper.** `Node.reconstitute(NodeSnapshot)`, where `NodeSnapshot` is a record in `core`'s domain package carrying the full persisted state. `NodePersistenceMapper` is a plain class, not MapStruct.
 
@@ -37,6 +40,7 @@ This resolves the ADR 001 / ADR 009 contradiction in ADR 009's favour. ADR 001's
 **No `@SQLDelete`.** It fires on `deleteById()` with no way to pass an `Instant`, so it would have to use the database clock — and ADR 009 makes the caller-supplied shared instant the restore selector. Precedent elsewhere additionally records that `@SQLDelete` collides with an optimistic-lock check. Deletion is a named port operation, not an override.
 
 **Migrations are Liquibase YAML** at `persistence/src/main/resources/db/postgresql/changelog/`, a master plus `001-create-node.yaml`. Liquibase is the dominant choice in other repos. The technology segment is in the path because the changelog stops being portable the moment it reaches for a `jsonb` column or a GIN index; labelling it truthfully costs nothing. **No per-module Postgres schema** — that convention keeps bounded contexts from colliding, and Nesto has one.
+— *Reversed by [ADR 014](014-backend-module-layout.md), the module only: the changelog is at `app/src/main/resources/db/postgresql/changelog/`.*
 
 **Adapter tests run against Testcontainers Postgres**, with Liquibase applying the real changelog and `ddl-auto=validate`, so the test asserts that the entity and the migration agree. H2 cannot make that assertion honestly: it would validate against a schema H2 accepted rather than the one Postgres will. Container reuse is not used; a JVM-wide singleton container with `TRUNCATE` between tests does the same job.
 
@@ -45,9 +49,12 @@ This resolves the ADR 001 / ADR 009 contradiction in ADR 009's favour. ADR 001's
 ## Consequences
 
 - `NodeSnapshot` lives in `core`, so the mapper in `:persistence` builds a `core` type and `core` gains no dependency. `Node`'s constructor stays private and `reconstitute` stays its only door.
+  — *Reversed by [ADR 014](014-backend-module-layout.md), the module only: the mapper is in `:app`.*
 - `reconstitute`'s signature stops growing. Adding a field changes the record and the mapper, and no call site's argument order.
 - `:persistence` has no Spring Boot application class of its own, so `@DataJpaTest` needs a test-only `@SpringBootConfiguration`.
+  — *Reversed by [ADR 014](014-backend-module-layout.md): the adapter's tests sit in `:app`, with the Spring Boot application class, `NestoApplication`, which [#103](https://github.com/decasamerlo/nesto/issues/103) adds. Until it does, `@DataJpaTest` still needs a test-only one.*
 - ArchUnit is not needed yet: every boundary that matters is a classpath fact. It becomes worth adding if `:api` and `:persistence` ever merge into one module.
+  — *Reversed by [ADR 014](014-backend-module-layout.md): the adapters merge into `:app`, the trigger named here, and five ArchUnit rules in `:app` guard the boundaries that stopped being classpath facts.*
 - `findById` must not resolve a deleted node, by whatever mechanism — ADR 009 decided that, and the contract test asserts it rather than discovering it. Whether `@SQLRestriction` applies to `find()` by primary key decides only whether this adapter gets it for free or needs its own clause, which the adapter test settles: the contract suite runs against the in-memory fake too, so it cannot see the annotation at all.
 - The adapter owns exactly four hand-written statements: two subtree CTEs, `findDeletedById`, and the write path of ADR 011. Everything else is derived queries.
 - The survey behind the choices above is cited as direction only, with no counts, names, or quotation. [ADR 012](012-precedent-without-evidence.md) records why; the practical effect is that every "dominant" and "minority" claim here rests on the author's word and cannot be audited from this repo.
@@ -56,3 +63,4 @@ This resolves the ADR 001 / ADR 009 contradiction in ADR 009's favour. ADR 001's
 
 - **2026-09-20** — corrected: the surveyed precedent does not reserve a snapshot record for the longest argument lists, and its threshold is not argument count; the typed-parameter option that answers the same hazard is now recorded as considered ([#96](https://github.com/decasamerlo/nesto/pull/96)).
 - **2026-10-06** — corrected: the table is `node`, per [database-naming.md](../conventions/database-naming.md), so the changelog is `001-create-node.yaml` ([#98](https://github.com/decasamerlo/nesto/pull/98)).
+- **2026-10-31** — reversed by ADR 014: the modules per direction, and the adapter's package. Every production adapter sits in `:app`, in `dev.nesto.adapter.{in,out}.{category}.{implementation}`, and ArchUnit guards the boundaries the modules did. The other decisions stand ([#121](https://github.com/decasamerlo/nesto/pull/121)).
