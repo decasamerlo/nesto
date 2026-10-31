@@ -77,4 +77,4 @@ Key decisions are recorded as ADRs in [docs/adr/](docs/adr/):
 - [ADR 012 — Precedent Without Evidence](docs/adr/012-precedent-without-evidence.md)
 - [ADR 013 — Marking Post-Acceptance Change](docs/adr/013-marking-post-acceptance-change.md)
 
-The domain model is documented in [CONTEXT.md](CONTEXT.md).
+The domain model is documented in [GLOSSARY.md](GLOSSARY.md).
