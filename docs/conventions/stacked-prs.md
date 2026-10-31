@@ -62,6 +62,8 @@ gh stack submit               # one PR per layer, each targeting the layer below
 
 Work in the top layer; `gh stack rebase` / `gh stack sync` keep layers aligned. Metadata lives in `.git/gh-stack` — nothing committed.
 
+**Before `gh stack submit`, re-read each new layer's issue, comments included.** Another session can change the plan while a layer is in progress. #112 moved #19's application service into `:core` mid-session, and #19's layer reached its PR knowing it only because a reviewer had read the issue's comments.
+
 **Trap — drafts by default.** In a non-interactive terminal, `gh stack submit` skips the editor (acts as `--auto`) and creates new PRs as drafts. Run it interactively, or pass `--open` to submit ready-for-review. If a PR came out as draft, fix with `gh pr ready <n>`.
 
 ## Adding a layer to an existing stack
