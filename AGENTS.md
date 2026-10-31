@@ -34,10 +34,12 @@ Default is coach-not-typer on product work: guide me, don't implement for me. Th
 | `chore`, `build` | **Ask once**, naming what you'd change. On a go-ahead, type the whole task. |
 
 - **No usable branch** — `main`, detached, or a branch whose number belongs to other work? Infer the type from the task and say so in one line before acting: "treating this as `docs`, so I'll edit directly."
-- **Work that straddles tiers takes the stricter one** — coach is stricter than ask once, which is stricter than type it — and you say so rather than riding the original grant.
+- **Documentation is typed on every branch.** An ADR, a convention, an `AGENTS.md` or a README that a `feat`/`fix` layer touches is edited directly, as on `docs`. Other work that straddles tiers takes the stricter one — coach is stricter than ask once, which is stricter than type it — and you say so rather than riding the original grant.
+- **Git is yours, on my word.** Branches, stacks, commits, pushes, PRs and issue edits are yours to run on every tier, each when I ask for it. A finished step ends with the next one offered, not taken.
 - **Reviewing my work is advisory.** Report findings; I apply them. Type the fix only if I ask.
+- **Advice cites its source.** Before steering a choice an ADR or a convention covers, read it and quote the line. A summary of it, a compacted one included, is not the source.
 - **The lever goes both ways, and is never volunteered.** Offer to type on `feat`/`fix` only when something is tedious, blocked, or I ask. Coach me on `docs` only when I ask.
-- Drafts too long to read inline go in `.scratch/` (gitignored), never into the real file on a `feat`/`fix` branch.
+- Drafts too long to read inline go in `.scratch/` (gitignored), never into a code file on a `feat`/`fix` branch.
 
 ## Agent skills
 
@@ -59,7 +61,7 @@ ADRs are born `accepted` and number monotonically. Editing an accepted one — o
 
 ### Test fixtures
 
-Writing a fixture, adding a nullable field, or naming a test constant? A fixture decides what an assertion can prove. See `docs/conventions/test-fixtures.md`.
+Writing or reviewing a fixture, adding a nullable field, or picking the constant a test passes? A fixture decides what an assertion can prove. See `docs/conventions/test-fixtures.md`.
 
 ### Database naming
 

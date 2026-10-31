@@ -37,6 +37,14 @@ A clock reading resists a role name, because it rarely maps to one field: an ins
 
 **In practice:** a file that builds its state only through operations needs no role-named constants at all. A file that injects state directly needs both kinds, and which is which follows the table.
 
+## A value asserted inside text needs a shape no wording has
+
+`withMessageContaining(id.value())` proves the message names the id only when nothing else in the message can match. An id that is an ordinary word can't prove it: with `NodeId.of("node")`, the template `"node %s not found"` contains `"node"` whether the id is filled in or not.
+
+The failing case: the application layer's rejection tests asserted that the not-found message contained `"absent"` and `"node"`, the two ids' values. A service throwing the fixed message `"node absent or deleted"` kept both green. ULID-shaped ids killed it.
+
+**In practice:** a value asserted with `contains` gets a shape no prose has, such as the ULID `NodeIdTest` uses. Its mutant is a fixed message built from the template's own words.
+
 ## Why
 
 A test suite is a claim about what the code may not do. A fixture too sparse to distinguish right from wrong makes that claim vacuous, and the suite still reports green — so nothing tells you. The mutant is what tells you.
