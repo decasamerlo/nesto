@@ -26,7 +26,7 @@ The in-memory fake is a test fixture, not a production adapter. It stays in `:co
 - No framework reaches the domain, the ports or the application services. This is the guarantee ADR 008 and ADR 010 both protect, and all three layers sit in `:core`, whose classpath has no framework to import.
 - `:core` depends on no other module, so nothing in it can reach an adapter or the composition root. The hexagon's inward dependency rule stays a compile error.
 
-**What moves to ArchUnit: the boundaries inside each module.** Five rules, as tests in `:app`, on `com.tngtech.archunit:archunit-junit5` 1.5.1, the latest release when this was written. Java 25 class files need [1.4.1](https://github.com/TNG/ArchUnit/releases/tag/v1.4.1) or later.
+**What moves to ArchUnit: the boundaries inside each module.** Five rules, as tests in `:app`, on `com.tngtech.archunit:archunit-junit6` 1.5.1, the latest release when this was written: the artifact ArchUnit [1.5.0](https://github.com/TNG/ArchUnit/releases/tag/v1.5.0) added for JUnit 6, which the backend runs. Java 25 class files need [1.4.1](https://github.com/TNG/ArchUnit/releases/tag/v1.4.1) or later.
 
 ```java
 // 1. The domain depends only on itself, the JDK and Lombok
@@ -99,3 +99,7 @@ The REST adapter's category is web, and its implementation is the protocol [ADR 
 - The five rules land with decasamerlo/nesto-backend#27, the change that takes the application layer's boundary off the classpath, and each is run red against the break it forbids before it lands.
 - A break in a boundary ArchUnit guards shows at test time, not at compile time: the code compiles, and the build fails on `:app`'s tests. The backend's CI runs `./gradlew build` as a required check, so the break still stops a merge.
 - The precedent above is cited as direction only, so a reader cannot audit it. [ADR 012](012-precedent-without-evidence.md) records why.
+
+## Amendments
+
+- **2026-10-31** — corrected: the rules run on `archunit-junit6`, not `archunit-junit5` ([#122](https://github.com/decasamerlo/nesto/pull/122)).
