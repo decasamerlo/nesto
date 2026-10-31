@@ -53,7 +53,7 @@ Two category roles and seven state roles, two of them (`deferred` and `pending-m
 
 ### Domain docs
 
-Single-context layout: `CONTEXT.md` at the root, ADRs in `docs/adr/`. See `docs/agents/domain.md`.
+Single-context layout: `GLOSSARY.md` at the root, ADRs in `docs/adr/`. See `docs/agents/domain.md`.
 
 ### ADR conventions
 

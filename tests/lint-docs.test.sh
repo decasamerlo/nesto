@@ -39,7 +39,7 @@ tree() { # tree <name> — a docs tree holding ADR 001 and nothing else
 	cp "$script" "$tmp/$1/scripts/"
 	printf '# One\n' >"$tmp/$1/docs/adr/001-one.md"
 	printf '# ADRs\n' >"$tmp/$1/docs/conventions/adr.md"
-	for f in AGENTS.md README.md CONTEXT.md; do printf '# %s\n' "$f" >"$tmp/$1/$f"; done
+	for f in AGENTS.md README.md GLOSSARY.md; do printf '# %s\n' "$f" >"$tmp/$1/$f"; done
 	printf 'See ADR 001.\n' >"$tmp/$1/docs/notes.md"
 }
 

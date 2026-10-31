@@ -32,10 +32,10 @@ cd "$(dirname "$0")/.."
 # came to cite an ADR 008 that a later edit then declared a gap never to be
 # filled. docs/conventions/adr.md, Numbering, says how a number is reserved.
 dangling=0
-for n in $(grep -rohE 'ADR[ -][0-9]{3}\b' docs AGENTS.md README.md CONTEXT.md | grep -oE '[0-9]{3}' | sort -u); do
+for n in $(grep -rohE 'ADR[ -][0-9]{3}\b' docs AGENTS.md README.md GLOSSARY.md | grep -oE '[0-9]{3}' | sort -u); do
 	ls docs/adr/"$n"-*.md >/dev/null 2>&1 && continue
 	grep -qE "^- \*\*$n\*\* — reserved by " docs/conventions/adr.md && continue
-	grep -rnE "ADR[ -]$n\b" docs AGENTS.md README.md CONTEXT.md >&2
+	grep -rnE "ADR[ -]$n\b" docs AGENTS.md README.md GLOSSARY.md >&2
 	dangling=1
 done
 if [ "$dangling" -ne 0 ]; then
@@ -44,4 +44,4 @@ if [ "$dangling" -ne 0 ]; then
 fi
 
 exec npx --yes "markdownlint-cli2@$VERSION" \
-	"docs/**/*.md" "AGENTS.md" "README.md" "CONTEXT.md"
+	"docs/**/*.md" "AGENTS.md" "README.md" "GLOSSARY.md"
