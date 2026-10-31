@@ -7,7 +7,7 @@
 # layout and its report is read back row by row.
 #
 # The cases are mostly the negative ones. Each has to fail *and* name which of
-# the three states is wrong, because "your layout is broken" is the unhelpful
+# the four states is wrong, because "your layout is broken" is the unhelpful
 # version of this tool, so every assertion reads one row's result out of the
 # report rather than only the exit status.
 #
@@ -28,6 +28,11 @@ trap 'rm -rf "$tmp"' EXIT
 GIT_CONFIG_GLOBAL=/dev/null
 GIT_CONFIG_SYSTEM=/dev/null
 export GIT_CONFIG_GLOBAL GIT_CONFIG_SYSTEM
+
+# The same for the user's skills: the checker compares the layout's against
+# them, so a developer's own would decide the skills rows.
+CLAUDE_CONFIG_DIR=$tmp/claude
+export CLAUDE_CONFIG_DIR
 
 meta=git@github.com:decasamerlo/nesto.git
 backend=git@github.com:decasamerlo/nesto-backend.git
@@ -276,6 +281,40 @@ check "plain directory -> exit 1" "1" "$status"
 check "plain directory -> layout FAILs" "FAIL" "$(verdict backend layout)"
 check "plain directory -> no origin verdict" "" "$(verdict backend origin)"
 check "plain directory -> no hook verdict" "" "$(verdict backend hook)"
+
+# --- a skill the user's copy shadows -------------------------------------
+
+# Claude Code loads the user's skill over the repo's of the same name, so a
+# repo copy that differs is one whose edits never run. Linked from
+# .claude/skills into .agents/skills, as the repo vendors them. The skill is
+# not named for the layout, since every row carries the layout's path.
+skill() { # skill <dir> <name> <text> — a skill in <dir>, holding <text>
+	mkdir -p "$1/$2"
+	printf '%s\n' "$3" >"$1/$2/SKILL.md"
+}
+vendored() { # vendored <layout> <name> <text> — a skill the layout vendors
+	skill "$tmp/$1/.agents/skills" "$2" "$3"
+	mkdir -p "$tmp/$1/.claude/skills"
+	ln -sfn "../../.agents/skills/$2" "$tmp/$1/.claude/skills/$2"
+}
+skill "$CLAUDE_CONFIG_DIR/skills" sample "the user's copy"
+
+run "$tmp/clean"
+check "no skill vendored -> skills ok" "ok" "$(verdict - skills)"
+
+layout mirrored
+vendored mirrored sample "the user's copy"
+vendored mirrored unshared "only in the repo"
+run "$tmp/mirrored"
+check "skill the same in both -> exit 0" "0" "$status"
+check "skill the same in both -> skills ok" "ok" "$(verdict - skills)"
+
+layout shadowed
+vendored shadowed sample "an edit that never loads"
+run "$tmp/shadowed"
+check "skill differs from the user's -> exit 1" "1" "$status"
+check "skill differs from the user's -> skills FAILs" "FAIL" "$(verdict - skills)"
+check "skill differs from the user's -> names it" "yes" "$(said "this repo's: sample")"
 
 printf '\n%s passed, %s failed\n' "$passed" "$failed"
 [ "$failed" -eq 0 ]

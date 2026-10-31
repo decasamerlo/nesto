@@ -3,14 +3,16 @@
 # flow in docs/conventions/stacked-prs.md requires, and reports which part is
 # wrong when it is not.
 #
-# Three states, and each one fails in a way that surfaces long after the
-# mistake that caused it — as a dead ../AGENTS.md pointer, or as commits
-# landing with no Refs: trailer:
+# Four states, and each one fails in a way that surfaces long after the
+# mistake that caused it — as a dead ../AGENTS.md pointer, as commits
+# landing with no Refs: trailer, or as an edit to a skill that never runs:
 #
 #   layout   mani.yaml is above this directory, and every declared project
 #            that exists on disk is a clone of its own
 #   origin   origin is the canonical repo mani.yaml declares for it
 #   hook     prepare-commit-msg is installed and would actually run
+#   skills   no skill in .claude/skills differs from the user's skill of the
+#            same name, the copy Claude Code loads instead
 #
 # One run reports every project mani.yaml declares, from wherever inside the
 # layout it is started. It is a command a person runs — after `mani sync`,
@@ -111,6 +113,31 @@ elif [ ! -x "$hook" ]; then
 	fail - hook "not executable: $hook" "chmod +x $hook"
 else
 	ok - hook "$hook"
+fi
+
+# --- skills ---------------------------------------------------------------
+#
+# When the user's skills directory and this repo's .claude/skills both carry a
+# skill by one name, Claude Code loads the user's, and this repo's copy never
+# runs: #111's edit to junior-to-senior went unused that way. A skill both
+# carry has to be the same files in each, so an edit lands in a copy that
+# loads.
+
+user_skills=${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills
+shadowed=
+for skill in "$root"/.claude/skills/*/; do
+	[ -d "$skill" ] || continue
+	name=$(basename "$skill")
+	[ -d "$user_skills/$name" ] || continue
+	diff -r "$skill" "$user_skills/$name/" >/dev/null 2>&1 ||
+		shadowed="$shadowed $name"
+done
+if [ -n "$shadowed" ]; then
+	fail - skills "the user's copy loads instead of this repo's:$shadowed" \
+		"diff -r .agents/skills/<name> $user_skills/<name>," \
+		"then make the two the same files, keeping the edits you want"
+else
+	ok - skills "no skill here differs from the user's copy"
 fi
 
 # --- what mani.yaml declares ----------------------------------------------

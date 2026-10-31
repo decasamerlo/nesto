@@ -129,7 +129,7 @@ Push only your own layers; never force-push someone else's branch.
 
 ## Verifying the layout
 
-`scripts/verify-layout.sh` checks the three states the layout has to be in, and names which one is wrong when it is not. Run it after `mani sync`, after the hook install, and before starting work. The walk it opens with starts at the current directory, so it runs from anywhere inside the layout — but the path you type is relative to where you are:
+`scripts/verify-layout.sh` checks the four states the layout has to be in, and names which one is wrong when it is not. Run it after `mani sync`, after the hook install, and before starting work. The walk it opens with starts at the current directory, so it runs from anywhere inside the layout — but the path you type is relative to where you are:
 
 ```bash
 scripts/verify-layout.sh       # from the meta-repo root
@@ -141,12 +141,15 @@ scripts/verify-layout.sh       # from the meta-repo root
 | `layout` | `mani.yaml` is somewhere above this directory, and every project it declares that exists on disk is a clone of its own |
 | `origin` | `origin` is the canonical repo `mani.yaml` declares for that directory |
 | `hook` | the project's `prepare-commit-msg` is a symlink resolving to an executable `.githooks/prepare-commit-msg` |
+| `skills` | every skill in `.claude/skills` that the user's skills directory (`~/.claude/skills`, or `$CLAUDE_CONFIG_DIR/skills`) also carries is the same files in both |
 
 One run reports the whole workspace: a row per project per state, `skip` for a repo that is declared but not cloned, and a nonzero exit if any row failed. It opens with the same parent walk `install-hooks` does — duplicated rather than shared, because that walk is what finds the script in the first place, so the two are marked to change together.
 
 **It reports the workspace it is standing in.** Run from a linked worktree of the meta-repo, the sub-repos are not beneath it and every one of them is a `skip`: truthful about that checkout, and no statement at all about the main one. Run it there too.
 
 **It checks `origin`, and never looks for the fork.** Step 2 above has outside contributors add their fork as a *second* remote precisely so `origin` keeps pointing at the canonical repo — which is what makes this check meaningful for them rather than hostile. It is also what the hook reads to decide between a bare and a qualified reference, so an install step that repointed `origin` would change the trailers too.
+
+**Trap — a vendored skill the user's copy shadows never runs.** When the user's skills directory and this repo's carry a skill by one name, Claude Code loads the user's. #111 edited the vendored `junior-to-senior`, and #112's review loaded the user's copy, installed a day later without that edit. The `skills` row fails on any skill the two carry differently and names it. Make the two the same files, keeping the edits you want: replacing the vendored copy with the user's drops an edit made here.
 
 **Trap — a dangling hook symlink is the state that most resembles a working one.** `[ -e ]` is false for a symlink whose target is gone, and git skips such a hook without a word, so the one state that looks most like "installed" is the one that silently does nothing. The check tests `[ -L ]` as well — the same care `mani.yaml`'s install guard takes on the write side. Deleting the checkout a link points into is how it happens.
 
@@ -156,7 +159,7 @@ One run reports the whole workspace: a row per project per state, `skip` for a r
 
 **CI is out of scope**, and not only because there is none yet: the layout is a property of a contributor's machine rather than of a pushed branch, so a green pipeline could never stand in for this.
 
-**The behaviour above is tested.** `tests/verify-layout.test.sh` builds a throwaway layout per case — the negative ones especially: no `mani.yaml` above, a fork as `origin`, no hook, a dangling hook symlink, a hook copied instead of linked, a hook belonging to another repository, a directory that is not a clone of its own — and asserts on the row rather than the exit status, so a failure has to keep naming *which* state is wrong:
+**The behaviour above is tested.** `tests/verify-layout.test.sh` builds a throwaway layout per case — the negative ones especially: no `mani.yaml` above, a fork as `origin`, no hook, a dangling hook symlink, a hook copied instead of linked, a hook belonging to another repository, a directory that is not a clone of its own, a skill that differs from the user's copy — and asserts on the row rather than the exit status, so a failure has to keep naming *which* state is wrong:
 
 ```bash
 tests/verify-layout.test.sh

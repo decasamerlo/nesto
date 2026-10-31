@@ -12,7 +12,7 @@ Checklist per plan:
 2. **Conventions.** Find 2-3 existing implementations of the closest analogous feature. How does this repo do routing, errors, config, tests, migrations? The plan either matches or justifies the break.
 3. **Prior decisions.** Search for ADRs, `docs/`, design notes, and revealing commit messages on the touched paths. A plan that re-litigates a settled decision without knowing it was settled is a blocker.
 4. **Real constraints.** Deploy target, build system, CI time budget, supported platforms, existing data volume and shape. These kill more plans than design taste does.
-5. **Blast radius.** What actually imports/calls the things the plan changes? The junior plan's scope estimate is a guess; the dependency graph is a fact.
+5. **Blast radius.** What actually imports/calls the things the plan changes? The junior plan's scope estimate is a guess; the dependency graph is a fact. When the plan changes work in flight, the graph spans every open PR's branch: `git grep -n <pattern> origin/main $(gh pr list --json headRefName --jq '.[].headRefName | "origin/" + .')` sweeps them all in one call, after a `git fetch`, and prefixes each hit with its branch.
 
 ## Track 2: Web research
 

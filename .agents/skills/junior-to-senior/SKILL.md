@@ -16,7 +16,7 @@ Both are altitude failures. The senior's job is to drag the plan to the right al
 
 ## The cardinal rule
 
-**Every senior finding needs evidence.** A claim about the codebase cites a file and line. A claim about best practice cites a fetched source — official docs, release notes, an RFC, a postmortem — with a date. A claim about runtime behaviour — what a query, a driver, a clock or a test actually does — cites a probe you ran: the command and its output. If web research is unavailable, the finding is labeled `[training-data, unverified]`; a runtime claim the environment cannot probe is labeled `[reasoned, unverified]`. Neither stale knowledge nor a plausible deduction gets laundered as current truth. A senior who argues from vibes is just a louder junior.
+**Every senior finding needs evidence.** A claim about the codebase cites a file and line. A claim about best practice cites a fetched source — official docs, release notes, an RFC, a postmortem — with a date. If web research is unavailable, the finding is labeled `[training-data, unverified]` so stale knowledge is never laundered as current truth. A senior who argues from vibes is just a louder junior.
 
 ## Phase 0: Capture the junior artifact
 
@@ -59,7 +59,7 @@ Query patterns, source-quality ranking, and when to stop are in **[references/re
 
 ### 1d. Isolation
 
-When the harness supports subagents, run the senior review in a context-isolated subagent that receives the frozen artifact and the research findings but *not* the reasoning that produced the junior plan. Self-review in the same context anchors on its own justifications; isolation is what makes the review adversarial rather than confirmatory.
+Phase 3 runs in a context-isolated subagent. Its brief carries the frozen artifact and the research findings, never the reasoning that produced the junior plan. Self-review in the same context anchors on its own justifications; isolation is what makes the review adversarial rather than confirmatory. Done when the subagent's findings are back and the review you present is built from them. Only a harness with no subagents runs Phase 3 inline, and the review says so.
 
 ## Phase 2: Diagnose the altitude
 
