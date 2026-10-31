@@ -23,6 +23,7 @@ A second question arrived with it and could not be answered separately, because 
 **An ADR is born `accepted`, and `accepted` describes the decision rather than its review.** An ADR on an open PR is visibly a proposal because the PR is open. Entering as `proposed` and flipping on merge would cost a second commit per ADR and sit badly with squash merge — the flip either rides inside the same squash, leaving the field reading `accepted` during review exactly as before, or needs a follow-up PR. Writing down what eleven of eleven ADRs already do beats adding ceremony that would not fix the thing it was proposed to fix.
 
 **Supersession is forward-only**, and reversals predating this rule are marked in place rather than split. Going forward, a reversal produces a new ADR and leaves the old one superseded — by then the superseded text is already a standalone file and simply stays put. Retroactively it is not. [ADR 006](006-contribution-and-review-model.md)'s original text exists only as a diff, so superseding it now would have to *manufacture* the very artifact supersession exists to preserve: a document in the tree that is wrong, that competes with the correct one for a reader's attention, and that describes a model operated for about two weeks. It takes an amendment entry pointing at the reversal instead.
+— *Narrowed by [ADR 014](014-backend-module-layout.md): "a reversal produces a new ADR and leaves the old one superseded" holds when the whole ADR is reversed. A reversal of one decision among several leaves the ADR `accepted`, with an amendment entry and a marker on each reversed passage; see [adr.md](../conventions/adr.md#reversing-one-decision).*
 
 ## Consequences
 
@@ -39,3 +40,8 @@ A second question arrived with it and could not be answered separately, because 
 **One ADR is marked as narrowed by another, and that is a new obligation.** An ADR that confines an earlier one's claim now owes the older file a back-pointer. ADR 010 and [ADR 011](011-no-conflict-detection-in-v1.md) already say what they do to earlier records; what changes is that the older file learns about it too. The cost is a small edit to a file the author was not otherwise touching, and forgetting it is the most likely way this convention decays.
 
 **This ADR complies with its own rule from the moment it lands**, carrying no amendment section because it has never been amended. That is the ordinary state, not an exemption.
+— *Narrowed by [ADR 014](014-backend-module-layout.md): true until ADR 014, which gave this record its first amendment, below.*
+
+## Amendments
+
+- **2026-10-31** — narrowed by ADR 014: supersession is for the reversal of a whole ADR, and the reversal of one decision among several is marked in place ([#121](https://github.com/decasamerlo/nesto/pull/121)).

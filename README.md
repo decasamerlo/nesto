@@ -76,5 +76,6 @@ Key decisions are recorded as ADRs in [docs/adr/](docs/adr/):
 - [ADR 011 — No Conflict Detection in v1](docs/adr/011-no-conflict-detection-in-v1.md)
 - [ADR 012 — Precedent Without Evidence](docs/adr/012-precedent-without-evidence.md)
 - [ADR 013 — Marking Post-Acceptance Change](docs/adr/013-marking-post-acceptance-change.md)
+- [ADR 014 — The Backend Module Layout](docs/adr/014-backend-module-layout.md)
 
 The domain model is documented in [GLOSSARY.md](GLOSSARY.md).

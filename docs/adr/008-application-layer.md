@@ -15,6 +15,7 @@ The tracker once proposed `NodeService`, one service per entity, against ADR 001
 **One application service per aggregate, implementing one driving port per operation.** `NodeApplicationService`, in `dev.nesto.application`, implements every use case and query on `Node`. That keeps ADR 001's promise, since callers see a port per operation and depend on it rather than on the class, and it gives create and move a single choke point. Both write `parentId`, ADR 011's parent guard has to hold on each, and a rule copied into two services is a rule one of them can forget. Because callers depend on the ports, splitting the service later changes no caller; the trigger to split is a constructor dependency that only some of its operations use.
 
 **Two framework-free modules.** The application service lives in a new `:application` Gradle module that depends on `:core` alone. Neither `:core` (domain and ports) nor `:application` declares a framework dependency, Lombok aside, so both layers are framework-free as a classpath fact: ADR 010 already prefers a compile error to an ArchUnit rule. This extends ADR 010's module list without changing it. The adapter modules, `:persistence` and `:api` later, depend on `:core` only, so the compiler stops an adapter from reaching the service except through a port. Only a composition root sees every module, and none exists yet ([#103](https://github.com/decasamerlo/nesto/issues/103)).
+— *Reversed by [ADR 014](014-backend-module-layout.md): there is no `:application` module. The application service lives in `:core`, which stays framework-free, and the adapters sit in `:app` with the composition root, where ArchUnit rules stop an adapter reaching the service except through a port.*
 
 **Driving ports live in `:core`'s `dev.nesto.port.in`**, beside `port.out`.
 
@@ -39,6 +40,7 @@ ADR 001's `MoveNodeUseCase(nodeId, newParentId, newPosition)` reads, under this,
 **A `Command` carries intent, never node state, and no expected-token parameter.** ADR 011's first condition is that writes stay intent-shaped; a command carrying a node's fields would break it and reopen ADR 011.
 
 **The application service carries no Spring annotation.** It is a plain class, built by a `@Bean` method in the composition root; `:application` has no Spring to annotate it with. Lombok's annotations are allowed: Lombok sits on the compile classpath only and none of its annotations is visible at runtime, so `@RequiredArgsConstructor` writes the constructor the `@Bean` method calls and leaves a container nothing to find. Where other repos allow Lombok in this layer, the dominant shape draws the same line. Adapters stay annotated and component-scanned. That answers the wiring question [decasamerlo/nesto-backend#24](https://github.com/decasamerlo/nesto-backend/pull/24) left for this layer.
+— *Reversed by [ADR 014](014-backend-module-layout.md), the module only: the service sits in `:core`, which has no Spring to annotate it with either.*
 
 **No transaction is opened here, for now.** Each port call is its own transaction, as ADR 010 has it, so `setNodeStatus` runs as two: the load and the save. That widens nothing ADR 011 has not already accepted. The window between them is the overlap of two in-flight requests, and the command carries intent rather than a client's copy of the node. #76's move, the first operation that saves several rows, revisits where the boundary lives.
 
@@ -59,10 +61,12 @@ ADR 001's `MoveNodeUseCase(nodeId, newParentId, newPosition)` reads, under this,
 **A write that returns the saved `Node`.** A REST response would need no second read. Rejected: it makes every write a query too, and until #103 settles the clock's precision it can hand back an `updatedAt` the database rounded on the way in. A write whose caller needs data declares a `Result`, which names what it returns.
 
 **The service in `:core`, under its own package.** One module fewer. Rejected: review or an ArchUnit rule would guard the boundary instead of the compiler, and ADR 010 already chose the compiler.
+— *Reversed by [ADR 014](014-backend-module-layout.md), which takes this option: ArchUnit rules guard the boundary, and the compiler still keeps every framework out of `:core`.*
 
 ## Consequences
 
 - The backend's module graph gains one edge, `:application` → `:core`. That neither module carries a framework is checkable: `./gradlew :core:dependencies --configuration compileClasspath :application:dependencies --configuration compileClasspath`. Gradle binds `--configuration` to the task before it, so each task needs its own.
+  — *Reversed by [ADR 014](014-backend-module-layout.md): the graph's one edge is `:app` → `:core`, and the check is `./gradlew :core:dependencies --configuration compileClasspath`.*
 - A no-op still saves. `withStatus` returns `this`, and the upsert writes identical values. Nobody should add a skip: `Node.equals` compares `id` alone (ADR 007), so a skip written with `equals` would never save.
 - Application-layer tests run against the in-memory fake with `Clock.fixed` and no Spring context, as ADR 011 already has the parent guard tested, and assert fields rather than `Node` equality, for the same `equals` reason.
 - `setNodeStatus` runs as two transactions until #76 moves the boundary.
@@ -72,3 +76,4 @@ ADR 001's `MoveNodeUseCase(nodeId, newParentId, newPosition)` reads, under this,
 ## Amendments
 
 - **2026-10-30** — narrowed the application service's no-annotation rule to Spring annotations: Lombok's, such as `@RequiredArgsConstructor`, are allowed ([#113](https://github.com/decasamerlo/nesto/pull/113)).
+- **2026-10-31** — reversed by ADR 014: the `:application` module, and the rejection of the service in `:core`. The application service lives in `:core`'s `dev.nesto.application`, and the other decisions stand ([#121](https://github.com/decasamerlo/nesto/pull/121)).

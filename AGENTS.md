@@ -57,7 +57,7 @@ Single-context layout: `GLOSSARY.md` at the root, ADRs in `docs/adr/`. See `docs
 
 ### ADR conventions
 
-ADRs are born `accepted` and number monotonically. Editing an accepted one — or narrowing it from a new ADR — marks the change. See `docs/conventions/adr.md`.
+ADRs are born `accepted` and number monotonically. Editing an accepted one — or narrowing it, or reversing one of its decisions, from a new ADR — marks the change. See `docs/conventions/adr.md`.
 
 ### Test fixtures
 

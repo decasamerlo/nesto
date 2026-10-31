@@ -2,7 +2,7 @@
 
 ADRs live in `docs/adr/` and record decisions that were hard to reverse, surprising without context, and the result of a real trade-off. This convention covers what happens to one *after* it is accepted — when it is amended, corrected, narrowed, or reversed — and how it is numbered.
 
-Why the rule exists, and the options it rejects, are in [ADR 013](../adr/013-marking-post-acceptance-change.md).
+Why the rule exists, and the options it rejects, are in [ADR 013](../adr/013-marking-post-acceptance-change.md). Why reversing one decision leaves an ADR `accepted` is in [ADR 014](../adr/014-backend-module-layout.md).
 
 ## Status
 
@@ -10,7 +10,7 @@ Why the rule exists, and the options it rejects, are in [ADR 013](../adr/013-mar
 
 **`accepted` describes the state of the decision, not the state of its review.** An ADR sitting on an open PR is visibly a proposal because the PR is open — the field does not track what GitHub already shows. So an ADR under review reading `accepted` is the convention working, not a defect.
 
-It follows that most post-acceptance change never touches `Status`: correcting a claim or appending a consequence does not alter the decision's state. Only a reversal reaches the field, and only going forward — see [Supersession](#supersession).
+It follows that most post-acceptance change never touches `Status`: correcting a claim or appending a consequence does not alter the decision's state. Only the reversal of a whole ADR reaches the field, and only going forward — see [Supersession](#supersession). Reversing one of its decisions leaves the field alone — see [Reversing one decision](#reversing-one-decision).
 
 ## What gets marked
 
@@ -21,7 +21,7 @@ Sort a change by **what a reader of the old text lost**. Not by which section mo
 | **Editorial** | No claim changes | nothing |
 | **Extended** | New material, nothing contradicted | an amendment entry |
 | **Corrected or narrowed** | The old text was wrong, or true only in a narrower range than it claimed | an amendment entry, plus an inline marker if the misleading text is still standing |
-| **Reversed** | The decision itself changed | an amendment entry; see [Supersession](#supersession) |
+| **Reversed** | The decision itself changed | an amendment entry; see [Supersession](#supersession), or [Reversing one decision](#reversing-one-decision) when the ADR's other decisions stand |
 
 **Editorial covers more than typos.** Lint fixes, re-pointed links, a deduplicated fact, a tightened sentence — and **redactions made to comply with [non-public-sources.md](non-public-sources.md)**. A redaction removes evidence, not truth: no claim becomes false, the decision is untouched, and [ADR 012](../adr/012-precedent-without-evidence.md) is already the standing record of why such sentences read as they do. A per-file note would restate one global rule across every file it ever touches.
 
@@ -44,7 +44,7 @@ At the foot of the ADR, oldest first:
 
 - **The leading verb carries the tier**, so the tier names never appear in an ADR. *Recorded*, *added*, *folded* for an extension; *corrected*, *narrowed* for a correction; *reversed* for a reversal. A reader judges whether to care without learning this vocabulary.
 - **The date is the commit's author date**, read from git rather than from when the PR merged.
-- **For a narrowing from outside, the date is the narrowing ADR's commit**, not the later edit that adds the marker — a reader wants to know when the claim stopped being true, not when someone got around to saying so.
+- **For a narrowing or a reversal from outside, the date is the outside ADR's commit**, not the later edit that adds the marker — a reader wants to know when the claim stopped being true, not when someone got around to saying so.
 - **The pointer is a PR**, in the link form ADRs already use for issues — `[#N](https://github.com/decasamerlo/nesto/pull/N)`. Bare `#N` appears in no ADR and should not start here.
 - **Commits that predate the PR workflow are linked directly**, as the first example shows. Six ADR-touching commits have no PR at all.
 
@@ -73,9 +73,30 @@ An ADR can be narrowed without being edited. [ADR 010](../adr/010-node-persisten
 
 ## Supersession
 
-**Going forward, a reversed decision is superseded, not amended.** The new decision gets its own ADR; the old one keeps its text and its number, and its `Status` becomes `superseded by ADR NNN`. This is the one case that touches the field.
+**Going forward, an ADR reversed whole is superseded, not amended.** The new decision gets its own ADR; the old one keeps its text and its number, and its `Status` becomes `superseded by ADR NNN`. This is the one case that touches the field. An ADR that loses one decision among several is not superseded — see [Reversing one decision](#reversing-one-decision).
 
 **Reversals that predate this convention are marked, not split.** [ADR 006](../adr/006-contribution-and-review-model.md) was reversed in place before this rule existed. It takes an amendment entry pointing at the reversal rather than being split into a superseded pair — supersession by pointer rather than by file, for the reasons in [ADR 013](../adr/013-marking-post-acceptance-change.md). Reading the unsplit ADR 006 as the rule being broken is the mistake this paragraph exists to prevent.
+
+## Reversing one decision
+
+An ADR usually records several decisions, and a later one can reverse one of them while the rest stand. [ADR 014](../adr/014-backend-module-layout.md) reversed [ADR 010](../adr/010-node-persistence-seam.md)'s modules per direction and its adapter's package, and [ADR 008](../adr/008-application-layer.md)'s `:application` module. The rest of each record is still in force.
+
+**The older ADR stays `accepted`.** `superseded by ADR NNN` would send a reader to the new ADR for decisions it does not hold.
+
+**It takes an amendment entry, and an inline marker on each reversed passage.** The entry's verb is *reversed*, it names the reversing ADR, and it says the rest stands:
+
+```markdown
+- **2026-10-31** — reversed by ADR 014: the `:application` module, and the rejection of the service in `:core`. The application service lives in `:core`'s `dev.nesto.application`, and the other decisions stand ([#121](https://github.com/decasamerlo/nesto/pull/121)).
+```
+
+A reversed passage is wrong as written, not true in a narrower range, so each one gets a marker, even inside a paragraph that otherwise stands:
+
+```markdown
+**Two models.** A separate `NodeEntity` — a mutable JPA bean — in package `dev.nesto.adapter.out.postgresql`, …
+— *Reversed by [ADR 014](014-backend-module-layout.md), the package only: it is `dev.nesto.adapter.out.persistence.postgresql`.*
+```
+
+**The reversing ADR's author writes the older ADR's entry and markers**, as in [Narrowing from outside](#narrowing-from-outside), and for the same reason: they are the one who knows the reversal happened. The reversing ADR says what it reverses, and the entry and markers are the back-pointers. Both are dated by the reversing ADR's commit, as [The amendment entry](#the-amendment-entry) has it.
 
 ## Numbering
 
