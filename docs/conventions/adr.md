@@ -43,9 +43,10 @@ At the foot of the ADR, oldest first:
 ```
 
 - **The leading verb carries the tier**, so the tier names never appear in an ADR. *Recorded*, *added*, *folded* for an extension; *corrected*, *narrowed* for a correction; *reversed* for a reversal. A reader judges whether to care without learning this vocabulary.
-- **The date is the commit's author date**, read from git rather than from when the PR merged.
+- **The date is the author date of the branch commit that writes the entry**: `git log -1 --format=%as` on the branch. Squash re-dates the commit on `main` to the merge, which can fall on a later day, so a merged PR's date comes from its head: `git fetch origin pull/<n>/head`, then the same `git log` on `FETCH_HEAD`.
 - **For a narrowing or a reversal from outside, the date is the outside ADR's commit**, not the later edit that adds the marker — a reader wants to know when the claim stopped being true, not when someone got around to saying so.
 - **The pointer is a PR**, in the link form ADRs already use for issues — `[#N](https://github.com/decasamerlo/nesto/pull/N)`. Bare `#N` appears in no ADR and should not start here.
+- **The number is written once the PR is open.** Until then the entry's pointer is `[#NNN](https://github.com/decasamerlo/nesto/pull/NNN)`, and `scripts/lint-docs.sh` fails while one is left in `docs/adr/`, so the amend that writes the number is the commit that passes. A number guessed ahead can already be spent: [#121](https://github.com/decasamerlo/nesto/pull/121) was guessed as #120.
 - **Commits that predate the PR workflow are linked directly**, as the first example shows. Six ADR-touching commits have no PR at all.
 
 **Trap — `git log` truncates two of these files.** `dba4666` renamed `0005`/`0006` to `005`/`006`, so reading their full history takes `git log --follow`. A date taken without it will be wrong.

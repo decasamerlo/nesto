@@ -62,6 +62,8 @@ gh stack submit               # one PR per layer, each targeting the layer below
 
 Work in the top layer; `gh stack rebase` / `gh stack sync` keep layers aligned. Metadata lives in `.git/gh-stack` — nothing committed.
 
+**Trap — after amending a layer, restack with `gh stack rebase`.** `.git/gh-stack` records a base for each layer: the tip of the layer below at the last `gh stack init`, `add` or `rebase`. `gh stack rebase` replays each layer from that base, so after an amend it leaves the replaced commit behind. Moving a layer with plain `git` leaves its base stale, and the next `gh stack rebase` after an amend replays the replaced commit and conflicts on it. If it conflicts, `gh stack rebase --abort`, then restack by hand with `git rebase --onto <lower> <old-lower-tip> <upper>`, the old tip from `git reflog <lower>`. Probed with gh-stack v0.1.1 on 2026-11-01.
+
 **Before `gh stack submit`, re-read each new layer's issue, comments included.** Another session can change the plan while a layer is in progress. #112 moved #19's application service into `:core` mid-session, and #19's layer reached its PR knowing it only because a reviewer had read the issue's comments.
 
 **Trap — drafts by default.** In a non-interactive terminal, `gh stack submit` skips the editor (acts as `--auto`) and creates new PRs as drafts. Run it interactively, or pass `--open` to submit ready-for-review. If a PR came out as draft, fix with `gh pr ready <n>`.
