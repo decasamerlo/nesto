@@ -1,7 +1,7 @@
 #!/bin/sh
 # Lints this repo's own markdown at a pinned tool version, and exits nonzero
-# when any file fails. First it checks that every "ADR NNN" names a written
-# ADR or a reserved number, which markdownlint cannot.
+# when any file fails. First it runs the checks markdownlint cannot, each
+# commented where it runs.
 #
 # The version is pinned on purpose. Run through an unpinned npx,
 # markdownlint-cli2 resolves to whatever is current, so its ruleset moves
@@ -40,6 +40,22 @@ for n in $(grep -rohE 'ADR[ -][0-9]{3}\b' docs AGENTS.md README.md GLOSSARY.md |
 done
 if [ "$dangling" -ne 0 ]; then
 	echo "lint-docs: each ADR above has no file in docs/adr/ and no reservation in docs/conventions/adr.md" >&2
+	exit 1
+fi
+
+# A reference that crosses a repo boundary is written owner/repo#N
+# (docs/conventions/stacked-prs.md, Referencing issues). ADR 014 reached
+# review with four bare nesto-backend#N, which only the reviewer caught.
+if grep -rnE '(^|[^/A-Za-z0-9_-])nesto-(backend|web|mobile)#[0-9]' docs AGENTS.md README.md GLOSSARY.md >&2; then
+	echo "lint-docs: write each reference above as decasamerlo/nesto-<repo>#N" >&2
+	exit 1
+fi
+
+# An amendment entry's PR number is written once the PR is open, and the
+# entry reads pull/NNN until then (docs/conventions/adr.md, The amendment
+# entry). This fails until the amend that writes the number.
+if grep -rn 'pull/NNN' docs/adr >&2; then
+	echo "lint-docs: amend each placeholder above to the PR's number" >&2
 	exit 1
 fi
 
