@@ -163,6 +163,8 @@ Screenshots are S-tier - when the environment is set up for it and the change is
 
 Execution-based evidence is A-tier. Test results, console output. Show the exact test that now fails and passes, using pseudocode.
 
+Name the command that ran and which test catches which mistake, never how many tests there are. A count proves nothing a reviewer checks, since CI already says pass or fail, and every later change, in this PR or in a layer below it, makes it wrong.
+
 ### Merge Danger
 
 Describe whether it's a one-way or two-way door. You can walk back through two-way doors, but not one-way doors. A PR that is cheap to roll back is lower risk. Changes that involve destructive actions or hard-to-reverse decisions are one-way doors.
