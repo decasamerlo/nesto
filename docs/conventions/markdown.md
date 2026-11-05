@@ -12,6 +12,8 @@ It runs [markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2) ove
 
 The script resolves the repo root from its own location, so it behaves the same from anywhere in the layout: `scripts/lint-docs.sh` from the meta-repo root, `../scripts/lint-docs.sh` from a sub-repo directory.
 
+**Given files, it lints those instead**: `scripts/lint-docs.sh .scratch/pr-body.md`, with paths relative to where you are. That is how a PR or issue body is checked before it is published. The same checks run, an ADR cited with no file and a bare cross-repo `#N` among them, and each file takes the markdownlint config nearest it, so a draft in `.scratch/` gets that folder's.
+
 Rules come from `.markdownlint-cli2.jsonc` at the root: the defaults, with `MD013` disabled. Prose here wraps at the paragraph rather than at a column. The 72-column rule in [commits.md](commits.md) governs commit bodies, which `git log` indents and never reflows, and says nothing about files.
 
 ## The version is pinned
