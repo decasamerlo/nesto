@@ -3,9 +3,10 @@
 # flow in docs/conventions/stacked-prs.md requires, and reports which part is
 # wrong when it is not.
 #
-# Four states, and each one fails in a way that surfaces long after the
+# Five states, and each one fails in a way that surfaces long after the
 # mistake that caused it — as a dead ../AGENTS.md pointer, as commits
-# landing with no Refs: trailer, or as an edit to a skill that never runs:
+# landing with no Refs: trailer, as an edit to a skill that never runs, or
+# as a restack that replays commits from another layer:
 #
 #   layout   mani.yaml is above this directory, and every declared project
 #            that exists on disk is a clone of its own
@@ -13,6 +14,8 @@
 #   hook     prepare-commit-msg is installed and would actually run
 #   skills   no skill in .claude/skills differs from the user's skill of the
 #            same name, the copy Claude Code loads instead
+#   stack    every layer .git/gh-stack records sits on a base still inside its
+#            branch, so gh stack rebase replays that layer and nothing else
 #
 # One run reports every project mani.yaml declares, from wherever inside the
 # layout it is started. It is a command a person runs — after `mani sync`,
@@ -259,6 +262,51 @@ while read -r name path url; do
 				"see $fork_flow (Fork contribution)"
 			;;
 		esac
+	fi
+
+	# The stack. gh stack rebase replays each layer from the base .git/gh-stack
+	# recorded for it, so a base that has left its branch's history makes it
+	# replay commits from below the layer. A layer moved with plain git keeps
+	# its old base: nesto-backend's #27 still sat on one of #24's replaced
+	# commits on 2026-11-05. A project with no stack gets no row, and a layer
+	# whose branch is gone here, merged or deleted, has nothing left to replay.
+	git_common=$(cd "$dir" && git rev-parse --git-common-dir 2>/dev/null || true)
+	case $git_common in
+	'') stack_file= ;;
+	/*) stack_file=$git_common/gh-stack ;;
+	*) stack_file=$dir/$git_common/gh-stack ;;
+	esac
+	if [ -n "$stack_file" ] && [ -f "$stack_file" ]; then
+		if ! command -v jq >/dev/null 2>&1; then
+			skip "$name" stack "jq is not installed, so $stack_file goes unread"
+		elif ! jq -e '.stacks' "$stack_file" >/dev/null 2>&1; then
+			fail "$name" stack "$stack_file is not the JSON gh stack writes"
+		else
+			layers=0
+			stale=
+			while read -r branch base; do
+				[ -n "$branch" ] || continue
+				(cd "$dir" && git rev-parse --verify --quiet "refs/heads/$branch" >/dev/null) ||
+					continue
+				layers=$((layers + 1))
+				(cd "$dir" && git merge-base --is-ancestor "$base" "refs/heads/$branch" 2>/dev/null) ||
+					stale="$stale $branch"
+			done <<STACK
+$(jq -r '.stacks[].branches[] | "\(.branch) \(.base)"' "$stack_file")
+STACK
+			if [ -n "$stale" ]; then
+				fail "$name" stack "recorded base outside its branch:$stale" \
+					"gh stack rebase would replay commits from below the layer" \
+					"restack by hand with git rebase --onto; gh stack push then records the new bases" \
+					"see $fork_flow (Trap — after amending a layer)"
+			elif [ "$layers" -eq 0 ]; then
+				ok "$name" stack "no layer it records is a branch here"
+			elif [ "$layers" -eq 1 ]; then
+				ok "$name" stack "1 layer, on a base inside its branch"
+			else
+				ok "$name" stack "$layers layers, each on a base inside its branch"
+			fi
+		fi
 	fi
 
 	# The hook. `--git-path hooks` because that is what the install task uses:

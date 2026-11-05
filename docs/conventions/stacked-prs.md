@@ -62,7 +62,7 @@ gh stack submit               # one PR per layer, each targeting the layer below
 
 Work in the top layer; `gh stack rebase` / `gh stack sync` keep layers aligned. Metadata lives in `.git/gh-stack` — nothing committed.
 
-**Trap — after amending a layer, restack with `gh stack rebase`.** `.git/gh-stack` records a base for each layer: the tip of the layer below at the last `gh stack init`, `add` or `rebase`. `gh stack rebase` replays each layer from that base, so after an amend it leaves the replaced commit behind. Moving a layer with plain `git` leaves its base stale, and the next `gh stack rebase` after an amend replays the replaced commit and conflicts on it. If it conflicts, `gh stack rebase --abort`, then restack by hand with `git rebase --onto <lower> <old-lower-tip> <upper>`, the old tip from `git reflog <lower>`. Probed with gh-stack v0.1.1 on 2026-11-01.
+**Trap — after amending a layer, restack with `gh stack rebase`.** `.git/gh-stack` records a base for each layer: the tip of the layer below at the last `gh stack init`, `add` or `rebase`. `gh stack rebase` replays each layer from that base, so after an amend it leaves the replaced commit behind. Moving a layer with plain `git` leaves its base stale, and the next `gh stack rebase` after an amend replays the replaced commit and conflicts on it. If it conflicts, `gh stack rebase --abort`, then restack by hand with `git rebase --onto <lower> <old-lower-tip> <upper>`, the old tip from `git reflog <lower>`. Probed with gh-stack v0.1.1 on 2026-11-01. **`gh stack push` repairs the metadata**: it records each pushed branch as its layer's head, and the head of the layer below as its base, so a restack by hand followed by a push leaves `gh stack rebase` working again (gh-stack v0.1.1, 2026-11-05). Until then, the `stack` row of [`scripts/verify-layout.sh`](#verifying-the-layout) fails on the layer whose base left its branch.
 
 **Before `gh stack submit`, re-read each new layer's issue, comments included.** Another session can change the plan while a layer is in progress. #112 moved #19's application service into `:core` mid-session, and #19's layer reached its PR knowing it only because a reviewer had read the issue's comments.
 
@@ -131,7 +131,7 @@ Push only your own layers; never force-push someone else's branch.
 
 ## Verifying the layout
 
-`scripts/verify-layout.sh` checks the four states the layout has to be in, and names which one is wrong when it is not. Run it after `mani sync`, after the hook install, and before starting work. The walk it opens with starts at the current directory, so it runs from anywhere inside the layout — but the path you type is relative to where you are:
+`scripts/verify-layout.sh` checks the five states the layout has to be in, and names which one is wrong when it is not. Run it after `mani sync`, after the hook install, and before starting work. The walk it opens with starts at the current directory, so it runs from anywhere inside the layout — but the path you type is relative to where you are:
 
 ```bash
 scripts/verify-layout.sh       # from the meta-repo root
@@ -144,6 +144,7 @@ scripts/verify-layout.sh       # from the meta-repo root
 | `origin` | `origin` is the canonical repo `mani.yaml` declares for that directory |
 | `hook` | the project's `prepare-commit-msg` is a symlink resolving to an executable `.githooks/prepare-commit-msg` |
 | `skills` | every skill in `.claude/skills` that the user's skills directory (`~/.claude/skills`, or `$CLAUDE_CONFIG_DIR/skills`) also carries is the same files in both |
+| `stack` | every layer `.git/gh-stack` records, whose branch exists here, sits on a recorded base inside that branch's history, so `gh stack rebase` replays that layer alone. Read with `jq`; a project with no stack has no row |
 
 One run reports the whole workspace: a row per project per state, `skip` for a repo that is declared but not cloned, and a nonzero exit if any row failed. It opens with the same parent walk `install-hooks` does — duplicated rather than shared, because that walk is what finds the script in the first place, so the two are marked to change together.
 
