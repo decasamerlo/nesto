@@ -316,5 +316,63 @@ check "skill differs from the user's -> exit 1" "1" "$status"
 check "skill differs from the user's -> skills FAILs" "FAIL" "$(verdict - skills)"
 check "skill differs from the user's -> names it" "yes" "$(said "this repo's: sample")"
 
+# --- a stack layer whose recorded base left its branch --------------------
+
+# gh stack rebase replays each layer from the base .git/gh-stack records, so a
+# base outside the branch replays commits from below the layer. The stack is
+# main, then lower, then upper; amending lower and moving upper with plain git
+# leaves upper's recorded base behind, as a restack by hand does.
+commit() { # commit <repo> <name> — a commit adding the file <name>
+	(cd "$1" && printf '%s\n' "$2" >"$2" && git add "$2" && git commit --quiet -m "$2")
+}
+sha() { # sha <repo> <rev>
+	(cd "$1" && git rev-parse "$2")
+}
+gh_stack() { # gh_stack <repo> <lower-base> <upper-base> — the metadata gh stack keeps
+	cat >"$1/.git/gh-stack" <<EOF
+{
+  "schemaVersion": 1,
+  "stacks": [
+    {
+      "trunk": { "branch": "main" },
+      "branches": [
+        { "branch": "lower", "base": "$2" },
+        { "branch": "upper", "base": "$3" }
+      ]
+    }
+  ]
+}
+EOF
+}
+
+run "$tmp/clean"
+check "no stack -> no stack row" "" "$(verdict backend stack)"
+
+layout stacked
+b=$tmp/stacked/backend
+commit "$b" trunk
+(cd "$b" && git switch --quiet -c lower) && commit "$b" lower
+(cd "$b" && git switch --quiet -c upper) && commit "$b" upper
+old_lower=$(sha "$b" lower)
+gh_stack "$b" "$(sha "$b" main)" "$old_lower"
+run "$tmp/stacked"
+check "stack on its bases -> exit 0" "0" "$status"
+check "stack on its bases -> stack ok" "ok" "$(verdict backend stack)"
+
+(
+	cd "$b"
+	git switch --quiet lower
+	git commit --quiet --amend -m "lower, amended"
+	git rebase --quiet --onto lower "$old_lower" upper
+)
+run "$tmp/stacked"
+check "base left its branch -> exit 1" "1" "$status"
+check "base left its branch -> stack FAILs" "FAIL" "$(verdict backend stack)"
+check "base left its branch -> names the layer" "yes" "$(said 'outside its branch: upper')"
+
+(cd "$b" && git switch --quiet main && git branch --quiet -D lower upper)
+run "$tmp/stacked"
+check "stack's branches gone -> stack ok" "ok" "$(verdict backend stack)"
+
 printf '\n%s passed, %s failed\n' "$passed" "$failed"
 [ "$failed" -eq 0 ]
