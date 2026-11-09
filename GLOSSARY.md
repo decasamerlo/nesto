@@ -18,7 +18,7 @@ A node with `parentId == null`. A user's top-level view shows all root nodes.
 _Avoid_: Workspace, dashboard, home, inbox
 
 **Position**:
-An integer that orders siblings. A node's position is supplied by its creator (the creation use case); the entity itself does not compute or assign it. Gaps are allowed, and no two siblings may share a position. Reindexing shifts only the minimum necessary siblings.
+An integer that orders siblings. A node's position is supplied by its creator (the creation use case); the entity itself does not compute or assign it. Gaps are allowed, and no two siblings may share a position. Reindexing shifts only the minimum necessary siblings. A move places a node right before the sibling it names, or last when it names none, which is where a new node goes; it takes a free value between that sibling and the one before it when there is one, and otherwise shifts the shorter run of siblings toward the nearer gap.
 _Avoid_: Order, sort index, rank
 
 **Status**:
