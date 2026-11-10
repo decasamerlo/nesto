@@ -23,8 +23,7 @@ The tracker once proposed `NodeService`, one service per entity, against ADR 001
 - A read is a `…Query`, and takes its inputs as parameters.
 - A nested type is named for its role and written with its port's name in front, `SetNodeStatusUseCase.Command`, because the one class that implements every port sees a `Command` for each.
 
-ADR 001's `MoveNodeUseCase(nodeId, newParentId, newPosition)` reads, under this, as the port and its `Command`'s components. ADR 011's `SetStatusUseCase(nodeId, DONE)` was an illustration: a port carries the aggregate's name, as ADR 001's does, so the first one is `SetNodeStatusUseCase`.
-— *Corrected by [ADR 001](001-node-based-domain-model.md): its third parameter is `beforeSiblingId`, the sibling the node goes before, none for the end.*
+ADR 001's `MoveNodeUseCase(nodeId, newParentId, beforeSiblingId)` reads, under this, as the port and its `Command`'s components. ADR 011's `SetStatusUseCase(nodeId, DONE)` was an illustration: a port carries the aggregate's name, as ADR 001's does, so the first one is `SetNodeStatusUseCase`.
 
 **A port method's prefix says what absence means**, in driving and driven ports alike.
 

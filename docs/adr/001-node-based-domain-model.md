@@ -21,11 +21,12 @@ The domain `Node` holds only a `NodeId parentId` value, not object references. "
   — *Narrowed by [ADR 010](010-node-persistence-seam.md): true of Spring Data derived queries, not of `@Query(nativeQuery = true)`.*
 - "Has children" is a derived, query-backed check via a repository method, not a stored counter — more correct-by-construction than a manually maintained cache.
 - Cycle prevention lives in a domain service, not on `Node` itself — the service receives the ancestor/descendant chain to check.
-- Ordering is a domain concern: `Node` carries its own `position` field, and domain rules never put two siblings on one position; siblings that already share one are ordered by id. Reindexing (shifting siblings when a move places a node among them) is hand-rolled — no `acts_as_list` equivalent in Java. Create appends and delete leaves a gap, so neither shifts anything.
+- Ordering is a domain concern: `Node` carries its own `position` field, and a create or a move never puts two siblings on one position; siblings that already share one are ordered by id. Reindexing (shifting siblings when a move places a node among them) is hand-rolled — no `acts_as_list` equivalent in Java. Create appends and delete leaves a gap, so neither shifts anything.
 - Move is a single use case, not two: `MoveNodeUseCase(nodeId, newParentId, beforeSiblingId)`, where `beforeSiblingId` is the sibling the node goes before, none for the end. "Reorder" is the special case where `newParentId == currentParentId`.
 
 ## Amendments
 
 - **2026-08-11** — folded the Node domain-model details into Consequences ([090b5eb](https://github.com/decasamerlo/nesto/commit/090b5eb)).
 - **2026-09-15** — narrowed by ADR 010: the recursive-CTE claim holds for Spring Data derived queries only ([#71](https://github.com/decasamerlo/nesto/pull/71)).
-- **2026-11-09** — corrected the move's third parameter to `beforeSiblingId`, the sibling the node goes before, and narrowed ordering: domain rules never put two siblings on one position but order those already sharing one by id, and only a move shifts siblings, since create appends and delete leaves a gap ([#134](https://github.com/decasamerlo/nesto/pull/134)).
+- **2026-11-09** — corrected the move's third parameter from `newPosition` to `beforeSiblingId`, and narrowed ordering: siblings already sharing a position are ordered by id, and only a move shifts siblings ([#134](https://github.com/decasamerlo/nesto/pull/134)).
+- **2026-11-10** — narrowed the ordering claim from every domain rule to create and move: a restore puts a node back at the position it held, even one a newcomer now holds, an open question in [#104](https://github.com/decasamerlo/nesto/issues/104) ([#NNN](https://github.com/decasamerlo/nesto/pull/NNN)).
