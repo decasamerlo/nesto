@@ -24,6 +24,7 @@ The tracker once proposed `NodeService`, one service per entity, against ADR 001
 - A nested type is named for its role and written with its port's name in front, `SetNodeStatusUseCase.Command`, because the one class that implements every port sees a `Command` for each.
 
 ADR 001's `MoveNodeUseCase(nodeId, newParentId, newPosition)` reads, under this, as the port and its `Command`'s components. ADR 011's `SetStatusUseCase(nodeId, DONE)` was an illustration: a port carries the aggregate's name, as ADR 001's does, so the first one is `SetNodeStatusUseCase`.
+— *Corrected by [ADR 001](001-node-based-domain-model.md): its third parameter is `beforeSiblingId`, the sibling the node goes before, none for the end.*
 
 **A port method's prefix says what absence means**, in driving and driven ports alike.
 
@@ -77,3 +78,4 @@ ADR 001's `MoveNodeUseCase(nodeId, newParentId, newPosition)` reads, under this,
 
 - **2026-10-30** — narrowed the application service's no-annotation rule to Spring annotations: Lombok's, such as `@RequiredArgsConstructor`, are allowed ([#113](https://github.com/decasamerlo/nesto/pull/113)).
 - **2026-10-31** — reversed by ADR 014: the `:application` module, and the rejection of the service in `:core`. The application service lives in `:core`'s `dev.nesto.application`, and the other decisions stand ([#121](https://github.com/decasamerlo/nesto/pull/121)).
+- **2026-11-09** — corrected by ADR 001: the `MoveNodeUseCase` quoted here takes `beforeSiblingId`, not `newPosition` ([#134](https://github.com/decasamerlo/nesto/pull/134)).
