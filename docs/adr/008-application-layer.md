@@ -48,6 +48,8 @@ ADR 001's `MoveNodeUseCase(nodeId, newParentId, beforeSiblingId)` reads, under t
 
 **Only application services call ports.** An application service reads through a port, calls the domain, and writes through a port. A domain service is a pure function handed its data, as ADR 001 already has cycle prevention receive the ancestor chain, and reindexing ([#15](https://github.com/decasamerlo/nesto/issues/15)) is written the same way. The rule also keeps the packages acyclic: `dev.nesto.port.out` imports `dev.nesto.domain`, so a domain service importing a port would make each depend on the other.
 
+**A domain service is named `{Concern}DomainService` and lives in `dev.nesto.domain.service`.** `{Concern}` is the glossary term for what the service decides: [#15](https://github.com/decasamerlo/nesto/issues/15)'s sibling ordering decides each sibling's `Position`, so it is `PositionDomainService`, and [#76](https://github.com/decasamerlo/nesto/issues/76) names ADR 001's cycle prevention by the same rule. The suffix tells it apart from `NodeApplicationService`, which sits beside it in `:core`. The package keeps domain services apart from the entities and value objects, as [dddsample-core](https://github.com/citerus/dddsample-core)'s `domain.service` does. Both follow the dominant shape in the newest code of other repos, which this record already follows for the application service.
+
 **Time comes from an injected `java.time.Clock`.** An application service takes a `Clock` in its constructor, reads `clock.instant()` once per operation, and passes that instant to the domain, so every timestamp one operation writes is the same instant. Tests use `Clock.fixed`. `Clock` rather than the narrower `InstantSource` follows precedent in other repos; the zone it carries goes unused. Which `Clock` production gets, the JDK's with its sub-microsecond digits or one truncated to the microsecond Postgres stores, is #103's to decide and to record here.
 
 **Not found is a `NoSuchElementException` naming the id.** `findById` returns empty for a node that is absent or deleted (ADR 009), and the service throws on either. It catches nothing, so `save`'s `IllegalStateException` for a node deleted between the load and the save (ADR 011) reaches the caller unchanged. The two types differ, so a later mapper can tell "no such node" from "write refused"; a named exception type is [#97](https://github.com/decasamerlo/nesto/issues/97)'s to decide.
@@ -63,6 +65,10 @@ ADR 001's `MoveNodeUseCase(nodeId, newParentId, beforeSiblingId)` reads, under t
 **The service in `:core`, under its own package.** One module fewer. Rejected: review or an ArchUnit rule would guard the boundary instead of the compiler, and ADR 010 already chose the compiler.
 — *Reversed by [ADR 014](014-backend-module-layout.md), which takes this option: ArchUnit rules guard the boundary, and the compiler still keeps every framework out of `:core`.*
 
+**A domain service named for its activity**, such as `SiblingPositioning`. Evans has a service "named for an activity, rather than an entity—a verb rather than a noun" (*Domain-Driven Design*, chapter 5), and public samples name theirs `{Concept}Service` or with an agent noun, as [IDDD_Samples](https://github.com/VaughnVernon/IDDD_Samples) does with `PasswordService` and `BusinessPriorityCalculator`; none of IDDD_Samples, dddsample-core or [ddd-by-examples/library](https://github.com/ddd-by-examples/library) uses the `DomainService` suffix. Rejected for the suffix's reason above, and because a name built on the glossary's `Position` needs no new word.
+
+**A domain service beside the entities, in `dev.nesto.domain` itself**, as IDDD_Samples and ddd-by-examples/library place theirs beside the model they serve. A mutator that only a domain service calls could then stay package-private. Rejected for the separation above, at the cost Consequences records.
+
 ## Consequences
 
 - The backend's module graph gains one edge, `:application` → `:core`. That neither module carries a framework is checkable: `./gradlew :core:dependencies --configuration compileClasspath :application:dependencies --configuration compileClasspath`. Gradle binds `--configuration` to the task before it, so each task needs its own.
@@ -71,6 +77,7 @@ ADR 001's `MoveNodeUseCase(nodeId, newParentId, beforeSiblingId)` reads, under t
 - Application-layer tests run against the in-memory fake with `Clock.fixed` and no Spring context, as ADR 011 already has the parent guard tested, and assert fields rather than `Node` equality, for the same `equals` reason.
 - `setNodeStatus` runs as two transactions until #76 moves the boundary.
 - `NodeRepositoryPort` breaks the prefix rule in two methods until #105 lands.
+- A domain service sits outside `Node`'s package, so a mutator it calls is public, and so is any test fixture its tests use. ADR 014's rules 1 and 5 already reach the subpackage through `dev.nesto.domain..`.
 - The precedent above is cited as direction only, so a reader cannot audit it. [ADR 012](012-precedent-without-evidence.md) records why.
 
 ## Amendments
@@ -78,3 +85,4 @@ ADR 001's `MoveNodeUseCase(nodeId, newParentId, beforeSiblingId)` reads, under t
 - **2026-10-30** — narrowed the application service's no-annotation rule to Spring annotations: Lombok's, such as `@RequiredArgsConstructor`, are allowed ([#113](https://github.com/decasamerlo/nesto/pull/113)).
 - **2026-10-31** — reversed by ADR 014: the `:application` module, and the rejection of the service in `:core`. The application service lives in `:core`'s `dev.nesto.application`, and the other decisions stand ([#121](https://github.com/decasamerlo/nesto/pull/121)).
 - **2026-11-09** — corrected by ADR 001: the `MoveNodeUseCase` quoted here takes `beforeSiblingId`, not `newPosition` ([#134](https://github.com/decasamerlo/nesto/pull/134)).
+- **2026-11-10** — recorded how a domain service is named and where it lives: `{Concern}DomainService`, in `dev.nesto.domain.service` ([#139](https://github.com/decasamerlo/nesto/pull/139)).
