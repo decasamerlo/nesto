@@ -20,8 +20,9 @@ The tracker once proposed `NodeService`, one service per entity, against ADR 001
 **Driving ports live in `:core`'s `dev.nesto.port.in`**, beside `port.out`.
 
 - A write is a `…UseCase`. Its one method takes a nested `Command` record and returns nothing, or a nested `Result` record when its caller needs data back.
-- A read is a `…Query`, and takes its inputs as parameters.
+- A read is a `…Query`, named for its method with the prefix included, as `SetNodeStatusUseCase` is for `setNodeStatus`: `GetNodeStatusSummaryQuery` for `getNodeStatusSummary`. The port's name then says what absence means, by the prefix rule below. Its method takes its inputs as parameters, and returns a domain type or a nested `Result` record.
 - A nested type is named for its role and written with its port's name in front, `SetNodeStatusUseCase.Command`, because the one class that implements every port sees a `Command` for each.
+- A `Result` carries data and no rule, so it has no compact-constructor check. The first is `GetNodeStatusSummaryQuery.Result`, the four counts of a node's `Status summary` ([#18](https://github.com/decasamerlo/nesto/issues/18)).
 
 ADR 001's `MoveNodeUseCase(nodeId, newParentId, beforeSiblingId)` reads, under this, as the port and its `Command`'s components. ADR 011's `SetStatusUseCase(nodeId, DONE)` was an illustration: a port carries the aggregate's name, as ADR 001's does, so the first one is `SetNodeStatusUseCase`.
 
@@ -86,3 +87,4 @@ ADR 001's `MoveNodeUseCase(nodeId, newParentId, beforeSiblingId)` reads, under t
 - **2026-10-31** — reversed by ADR 014: the `:application` module, and the rejection of the service in `:core`. The application service lives in `:core`'s `dev.nesto.application`, and the other decisions stand ([#121](https://github.com/decasamerlo/nesto/pull/121)).
 - **2026-11-09** — corrected by ADR 001: the `MoveNodeUseCase` quoted here takes `beforeSiblingId`, not `newPosition` ([#134](https://github.com/decasamerlo/nesto/pull/134)).
 - **2026-11-10** — recorded how a domain service is named and where it lives: `{Concern}DomainService`, in `dev.nesto.domain.service` ([#139](https://github.com/decasamerlo/nesto/pull/139)).
+- **2026-11-19** — recorded how a `…Query` is named and what its method returns, and that a `Result` carries data and no rule ([#140](https://github.com/decasamerlo/nesto/pull/140)).
