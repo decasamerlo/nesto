@@ -26,7 +26,7 @@ The in-memory fake is a test fixture, not a production adapter. It stays in `:co
 - No framework reaches the domain, the ports or the application services. This is the guarantee ADR 008 and ADR 010 both protect, and all three layers sit in `:core`, whose classpath has no framework to import.
 - `:core` depends on no other module, so nothing in it can reach an adapter or the composition root. The hexagon's inward dependency rule stays a compile error.
 
-**What moves to ArchUnit: the boundaries inside each module.** Five rules, as tests in `:app`, on `com.tngtech.archunit:archunit-junit6` 1.5.1, the latest release when this was written: the artifact ArchUnit [1.5.0](https://github.com/TNG/ArchUnit/releases/tag/v1.5.0) added for JUnit 6, which the backend runs. Java 25 class files need [1.4.1](https://github.com/TNG/ArchUnit/releases/tag/v1.4.1) or later.
+**What moves to ArchUnit: the boundaries inside each module.** Seven rules and an allow-list per adapter category, as tests in `:app`, on `com.tngtech.archunit:archunit-junit6` 1.5.1, the latest release when this was written: the artifact ArchUnit [1.5.0](https://github.com/TNG/ArchUnit/releases/tag/v1.5.0) added for JUnit 6, which the backend runs. Java 25 class files need [1.4.1](https://github.com/TNG/ArchUnit/releases/tag/v1.4.1) or later.
 
 ```java
 // 1. The domain depends only on itself, the JDK and Lombok
@@ -56,6 +56,37 @@ classes().that().resideInAPackage("dev.nesto..")
 - **Rule 3**: an adapter reaches an application service through a driving port only. ADR 008 and ADR 010 had the adapter modules' classpath enforce this.
 - **Rule 4**: a slice is a direction and a category, so the REST adapter imports no `NodeEntity`. That is the boundary ADR 010 split its modules by direction to protect. A new category is a new slice, covered without editing the rule. Written for `adapter.in` alone, the rule would match nothing until the REST adapter exists, and fail.
 - **Rule 5**: `dev.nesto`, without `..`, is that package alone, which holds the composition root. `adapter.[in|out].*.*..` requires a direction, a category and an implementation, so an adapter package that leaves one out fails the rule.
+
+**What an adapter reaches: rules 6 and 7, and an allow-list per adapter category.** Rules 1 to 5 leave two boundaries open. ADR 010's modules would have kept the first: each adapter module's build file would have listed the libraries its adapters reach, so the REST adapter could reach JPA, JDBC or the connection pool only through a line added there, where review sees it. In `:app` every adapter sees every library. No module would have kept the second, since every adapter module would have depended on `:core`, where the ports sit: ADR 008's "Only application services call ports" holds for the domain through rule 1, and for no adapter.
+
+```java
+// 6. Only the application services, the driven adapters and the composition root use a driven port
+classes().that().resideInAPackage("dev.nesto.port.out..")
+    .should().onlyHaveDependentClassesThat()
+    .resideInAnyPackage(
+        "dev.nesto.port.out..", "dev.nesto.application..", "dev.nesto.adapter.out..", "dev.nesto");
+
+// 7. Every adapter sits in a category that has an allow-list
+classes().that().resideInAPackage("dev.nesto.adapter..")
+    .should().resideInAnyPackage("dev.nesto.adapter.out.persistence..");
+
+// An allow-list, one per adapter category, where {direction} is in or out
+classes().that().resideInAPackage("dev.nesto.adapter.{direction}.{category}..")
+    .should().onlyDependOnClassesThat()
+    .resideInAnyPackage(
+        "dev.nesto.adapter.{direction}.{category}..", "dev.nesto.port.{direction}..",
+        "dev.nesto.domain", /* the JDK and the category's libraries, package by package */);
+```
+
+- **Rule 6** guards "Only application services call ports" from the port's side, for every driving adapter at once. A driven adapter implements a driven port, so `adapter.out` is allowed, and a driving adapter is not. That leaves a driven adapter free to call a driven port too: no rule tells calling one from implementing it. `dev.nesto` is the composition root, whose `@Bean` methods build the application services from the ports.
+- **An allow-list** does for a category what its module's build file would have done: it names every package the category's classes may reach.
+  - **An allow-list, not a deny-list.** A rule that forbids named libraries passes every library it forgets.
+  - **The JDK goes in by package.** `java..` would admit `java.sql`, and JDBC with it.
+  - **The domain goes in as `dev.nesto.domain`, with no `..`.** An adapter reaches the entities and the value objects, and no domain service: ADR 008 has the application service call the domain, and puts domain services in `dev.nesto.domain.service`.
+  - **The ports are its direction's.** A driving adapter calls `port.in`, and a driven adapter implements `port.out`.
+  - **A list grows one package at a time**, in the change that first uses the package. Its entries live in the test, not in this record. The persistence adapter's list lands with rules 6 and 7, and the web adapter's with the REST adapter's first class.
+- **Rule 7 is a tripwire.** It fails the first class of a category that has no list yet. A list that matches no class fails, as rule 4 would written for `adapter.in` alone, and no rule here calls `allowEmptyShould`, so the web adapter's list can't land before the REST adapter does. Rule 7 holds its place: a new category adds its package to rule 7 and writes its list beside it. Rule 7 is to the lists what rule 5 is to the rules, since a class in a category with no list is checked by none. It costs the edit rule 4 avoids, a rule changed for each new category, though that category needs a list of its own anyway.
+- **Rule 7 and the lists sit in a second class, which imports production code only.** `ArchitectureTest` holds rules 1 to 6 and imports `:app`'s tests on purpose. Under that import, a list written from the production classes' imports fails on their tests: a test reaches JUnit, AssertJ and Testcontainers, which its class never does. The second class takes `ImportOption.DoNotIncludeTests`, which keeps `:core`'s test fixtures, so the in-memory fake answers to the persistence adapter's list too. No list holds `:app`'s tests to their libraries.
 
 **The rules are written by hand**, not with ArchUnit's `onionArchitecture()`, under which "Adapters can use both the items of the `domain` as well as the `application` packages" ([user guide](https://github.com/TNG/ArchUnit/blob/main/docs/userguide/008_The_Library_API.adoc)). Rule 3 forbids that.
 
@@ -96,10 +127,11 @@ The REST adapter's category is web, and its implementation is the protocol [ADR 
 - decasamerlo/nesto-backend#24's adapter, its tests and its Liquibase changelog go into `:app`, the changelog at `app/src/main/resources/db/postgresql/changelog/`.
 - `NodeApplicationService` goes into `:core`'s `dev.nesto.application`, and no `:application` module is created. Its tests run as ADR 008 has them, on the in-memory fake with no Spring context.
 - That `:core` carries no framework is checkable: `./gradlew :core:dependencies --configuration compileClasspath` lists Lombok alone.
-- The five rules land with decasamerlo/nesto-backend#27, the change that takes the application layer's boundary off the classpath, and each is run red against the break it forbids before it lands.
+- Rules 1 to 5 land with decasamerlo/nesto-backend#27, the change that takes the application layer's boundary off the classpath. Rules 6 and 7 and the persistence adapter's allow-list land with [#124](https://github.com/decasamerlo/nesto/issues/124)'s nesto-backend change, and the web adapter's list with the REST adapter's first class. Each is run red against the break it forbids before it lands.
 - A break in a boundary ArchUnit guards shows at test time, not at compile time: the code compiles, and the build fails on `:app`'s tests. The backend's CI runs `./gradlew build` as a required check, so the break still stops a merge.
 - The precedent above is cited as direction only, so a reader cannot audit it. [ADR 012](012-precedent-without-evidence.md) records why.
 
 ## Amendments
 
 - **2026-10-31** — corrected: the rules run on `archunit-junit6`, not `archunit-junit5` ([#122](https://github.com/decasamerlo/nesto/pull/122)).
+- **2026-11-24** — added rules 6 and 7 and an allow-list per adapter category, which keep a driving adapter off the driven ports and each adapter to the libraries its category lists ([#143](https://github.com/decasamerlo/nesto/pull/143)).
