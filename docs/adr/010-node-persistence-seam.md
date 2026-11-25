@@ -35,7 +35,7 @@ This takes the minority shape from other repos, where positional `reconstitute` 
 
 **The subtree operations are recursive CTEs** — `WITH RECURSIVE` plus a guarded `UPDATE`, one atomic statement each, returning the affected row count the port already asks for. The in-memory fake keeps an iterative walk, so ADR 009's two independent implementations held in agreement by `NodeRepositoryContractTest` survive.
 
-This resolves the ADR 001 / ADR 009 contradiction in ADR 009's favour. ADR 001's reason is true of Spring Data *derived* queries and not of `@Query(nativeQuery = true)`; its decision to store hierarchy as an adjacency list stands unchanged, and `findChildren` remains a single `WHERE parent_id = ?`. The CTE is confined to the two subtree writes.
+This resolves the ADR 001 / ADR 009 contradiction in ADR 009's favour. ADR 001's reason is true of Spring Data *derived* queries and not of `@Query(nativeQuery = true)`; its decision to store hierarchy as an adjacency list stands unchanged, and `listChildren` remains a single `WHERE parent_id = ?`. The CTE is confined to the two subtree writes.
 
 **No `@SQLDelete`.** It fires on `deleteById()` with no way to pass an `Instant`, so it would have to use the database clock — and ADR 009 makes the caller-supplied shared instant the restore selector. Precedent elsewhere additionally records that `@SQLDelete` collides with an optimistic-lock check. Deletion is a named port operation, not an override.
 

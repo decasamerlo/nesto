@@ -32,7 +32,7 @@ ADR 001's `MoveNodeUseCase(nodeId, newParentId, beforeSiblingId)` reads, under t
 - `get…` returns the value or throws: absence breaks an invariant.
 - `list…` returns a `List`, empty when nothing matches.
 
-`NodeRepositoryPort`'s `findRoots` and `findChildren` return lists, so they break the rule today; [#105](https://github.com/decasamerlo/nesto/issues/105) renames them `listRoots` and `listChildren`. The rule is about ports. A Spring Data repository inside an adapter keeps `find…By`, because `list…By` is not a query subject Spring Data accepts.
+`NodeRepositoryPort`'s `listRoots` and `listChildren` return lists, and were `findRoots` and `findChildren` until [#105](https://github.com/decasamerlo/nesto/issues/105) renamed them for this rule. The rule is about ports. A Spring Data repository inside an adapter keeps `find…By`, because `list…By` is not a query subject Spring Data accepts.
 
 **The method is named after the operation**: `setNodeStatus`, never `execute`. One service implements every port of its aggregate, so an `execute` on each would leave methods that differ only by parameter type.
 
@@ -77,7 +77,7 @@ ADR 001's `MoveNodeUseCase(nodeId, newParentId, beforeSiblingId)` reads, under t
 - A no-op still saves. `withStatus` returns `this`, and the upsert writes identical values. Nobody should add a skip: `Node.equals` compares `id` alone (ADR 007), so a skip written with `equals` would never save.
 - Application-layer tests run against the in-memory fake with `Clock.fixed` and no Spring context, as ADR 011 already has the parent guard tested, and assert fields rather than `Node` equality, for the same `equals` reason.
 - `setNodeStatus` runs as two transactions until #76 moves the boundary.
-- `NodeRepositoryPort` breaks the prefix rule in two methods until #105 lands.
+- `NodeRepositoryPort` follows the prefix rule.
 - A domain service sits outside `Node`'s package, so a mutator it calls is public, and so is any test fixture its tests use. ADR 014's rules 1 and 5 already reach the subpackage through `dev.nesto.domain..`.
 - The precedent above is cited as direction only, so a reader cannot audit it. [ADR 012](012-precedent-without-evidence.md) records why.
 
@@ -88,3 +88,4 @@ ADR 001's `MoveNodeUseCase(nodeId, newParentId, beforeSiblingId)` reads, under t
 - **2026-11-09** — corrected by ADR 001: the `MoveNodeUseCase` quoted here takes `beforeSiblingId`, not `newPosition` ([#134](https://github.com/decasamerlo/nesto/pull/134)).
 - **2026-11-10** — recorded how a domain service is named and where it lives: `{Concern}DomainService`, in `dev.nesto.domain.service` ([#139](https://github.com/decasamerlo/nesto/pull/139)).
 - **2026-11-19** — recorded how a `…Query` is named and what its method returns, and that a `Result` carries data and no rule ([#140](https://github.com/decasamerlo/nesto/pull/140)).
+- **2026-11-25** — recorded that `NodeRepositoryPort` follows the prefix rule, now that `findRoots` and `findChildren` are `listRoots` and `listChildren` ([#144](https://github.com/decasamerlo/nesto/pull/144)).
