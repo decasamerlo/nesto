@@ -32,6 +32,10 @@ Use this template for writing the PR body:
 <optional: potential ramifications of merge>
 ```
 
+## Before publishing
+
+In a personal repo, where the user is the only reviewer, the body asks no reader for a second opinion. Each doubt about the change, such as wording from the issue that reads wrong after it, goes to the user before the PR opens, as a concrete fix beside keeping it as is (AskUserQuestion, with the before and after text in a preview). The chosen fix lands in the PR, and a departure from the issue is named in the body. On one earlier PR the user had to ask "How can you fix that open question for me?", and on another a "second opinion is welcome" reached the published body.
+
 ## Sections
 
 Skip all preambles and keep prose brief. Use the user's domain language from `GLOSSARY.md`.
